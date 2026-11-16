@@ -5,11 +5,20 @@ namespace WinFormsApp1
 {
     public static class HaaIsTheme
     {
-        public static readonly Color Green = Color.FromArgb(27, 77, 62);      // #1B4D3E (Forest Green)
-        public static readonly Color Yellow = Color.FromArgb(255, 193, 7);    // #FFC107 (Golden Yellow)
+        public static readonly Color Green = Color.FromArgb(27, 77, 62);
+        public static readonly Color Yellow = Color.FromArgb(255, 193, 7);
         public static readonly Color Amber = Yellow;
-        public static readonly Color White = Color.FromArgb(255, 255, 255);   // #FFFFFF
+        public static readonly Color White = Color.FromArgb(255, 255, 255);
         public static readonly Color MutedText = Color.FromArgb(100, 110, 105);
+
+        public static void StyleForm(Form form)
+        {
+            form.ShowIcon = false; // Энэ нь гарчиг дээрх хар жижиг дүрслэлийг арилгаж цэвэрхэн болгоно
+            form.BackColor = White;
+            form.StartPosition = FormStartPosition.CenterScreen;
+            form.FormBorderStyle = FormBorderStyle.FixedSingle;
+            form.MaximizeBox = false;
+        }
 
         public static Label CreateLabel(string text, int x, int y)
         {
