@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Net.Mail;
@@ -8,92 +9,126 @@ namespace WinFormsApp1
 {
     public class RegisterForm : Form
     {
-        private readonly TextBox txtLastName = new();
-        private readonly TextBox txtFirstName = new();
-        private readonly TextBox txtStudentID = new();
-        private readonly TextBox txtEmail = new();
-        private readonly ComboBox cboMajor = new();
-        private readonly TextBox txtPassword = new();
+        private readonly TextBox txtLastName = new TextBox();
+        private readonly TextBox txtFirstName = new TextBox();
+        private readonly TextBox txtStudentID = new TextBox();
+        private readonly TextBox txtEmail = new TextBox();
+        private readonly ComboBox cboMajor = new ComboBox();
+        private readonly TextBox txtPassword = new TextBox();
+        private readonly List<Label> jobBubbles = new List<Label>();
+        private string selectedMajor = "";
         private const string ConnectionString = "Server=localhost;Database=haais_db;Uid=root;Pwd=;";
 
         public RegisterForm()
         {
-            Text = "Шинэ Оюутны Бүртгэл";
+            Text = "КООСЭН - Шинэ Оюутны Бүртгэл";
+            HaaIsTheme.StyleForm(this);
             StartPosition = FormStartPosition.CenterParent;
-            ClientSize = new Size(640, 740);
-            MinimumSize = new Size(640, 740);
-            MaximumSize = new Size(640, 740);
-            BackColor = HaaIsTheme.White;
-            Font = new Font("Segoe UI", 10F);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
-            MaximizeBox = false;
+            ClientSize = new Size(700, 650);
 
             var header = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 115,
+                Height = 92,
                 BackColor = HaaIsTheme.Green
             };
             header.Controls.Add(new Label
             {
-                Text = "Шинэ Оюутны Бүртгэл",
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter,
+                Text = "Дархан Коосэн - Шинэ Оюутны Бүртгэл",
+                Location = new Point(40, 18),
+                AutoSize = true,
                 ForeColor = HaaIsTheme.White,
-                Font = new Font("Segoe UI", 20F, FontStyle.Bold)
+                Font = new Font("Segoe UI", 17F, FontStyle.Bold)
+            });
+            header.Controls.Add(new Label
+            {
+                Text = "Мэдээллээ бөглөж, инженерийн мэргэжлийн чиглэлээ дугуй товчоор сонгоно уу",
+                Location = new Point(42, 54),
+                AutoSize = true,
+                ForeColor = Color.FromArgb(200, 225, 215),
+                Font = new Font("Segoe UI", 9.5F)
             });
             Controls.Add(header);
 
-            AddTextField("Овог", txtLastName, "txtLastName", 140);
-            AddTextField("Нэр", txtFirstName, "txtFirstName", 215);
-            AddTextField("Оюутны код", txtStudentID, "txtStudentID", 290);
-            AddTextField("Имэйл", txtEmail, "txtEmail", 365);
+            var card = HaaIsTheme.CreateCard(35, 110, 630, 510, 18);
+            Controls.Add(card);
 
-            Controls.Add(HaaIsTheme.CreateLabel("Мэргэжил", 100, 440));
-            cboMajor.Name = "cboMajor";
-            cboMajor.Location = new Point(100, 467);
-            cboMajor.Size = new Size(440, 34);
-            cboMajor.DropDownStyle = ComboBoxStyle.DropDownList;
-            cboMajor.Font = new Font("Segoe UI", 11F);
-            cboMajor.Items.AddRange(new object[] { "Агроэкологи", "Эдийн засаг", "Мал эмнэлэг", "Инженер" });
-            Controls.Add(cboMajor);
+            card.Controls.Add(HaaIsTheme.CreateLabel("Овог", 35, 22));
+            txtLastName.Name = "txtLastName";
+            card.Controls.Add(HaaIsTheme.CreateStyledInput(txtLastName, 35, 48, 265, "Овог оруулах"));
 
-            AddTextField("Нууц үг", txtPassword, "txtPassword", 515);
-            txtPassword.PasswordChar = '●';
+            card.Controls.Add(HaaIsTheme.CreateLabel("Нэр", 330, 22));
+            txtFirstName.Name = "txtFirstName";
+            card.Controls.Add(HaaIsTheme.CreateStyledInput(txtFirstName, 330, 48, 265, "Нэр оруулах"));
 
-            var btnRegister = HaaIsTheme.CreateButton("Бүртгүүлэх", "btnRegister", 100, 600, primary: true);
-            btnRegister.Click += BtnRegister_Click;
-            Controls.Add(btnRegister);
+            card.Controls.Add(HaaIsTheme.CreateLabel("Оюутны код", 35, 102));
+            txtStudentID.Name = "txtStudentID";
+            card.Controls.Add(HaaIsTheme.CreateStyledInput(txtStudentID, 35, 128, 265, "Жишээ: K2026001"));
 
-            var btnBack = HaaIsTheme.CreateButton("Буцах", "btnBack", 350, 600, primary: false);
-            btnBack.Click += BtnBack_Click;
-            Controls.Add(btnBack);
+            card.Controls.Add(HaaIsTheme.CreateLabel("Имэйл хаяг", 330, 102));
+            txtEmail.Name = "txtEmail";
+            card.Controls.Add(HaaIsTheme.CreateStyledInput(txtEmail, 330, 128, 265, "student@kosen.edu.mn"));
+
+            // ЗӨВХӨН 3 Инженерийн мэргэжлийн дугуй Bubble сонголт
+            card.Controls.Add(HaaIsTheme.CreateLabel("Инженерийн мэргэжил сонгох (Дарж идэвхжүүлнэ үү):", 35, 185));
+
+            string[] jobDisplays = { "⚡ Цахилгааны инженер", "⚙️ Механик инженер", "💻 МТ-ийн инженер (IT)" };
+            string[] jobValues = { "Цахилгааны инженер", "Механик инженер", "Мэдээллийн технологийн инженер" };
+
+            cboMajor.Visible = false;
+            foreach (var val in jobValues) cboMajor.Items.Add(val);
+            card.Controls.Add(cboMajor);
+
+            int bx = 35;
+            for (int i = 0; i < jobDisplays.Length; i++)
+            {
+                string display = jobDisplays[i];
+                string val = jobValues[i];
+
+                var pill = HaaIsTheme.CreateBubbleOption(display, bx, 218, 180, 42, false);
+                pill.Click += (s, e) =>
+                {
+                    foreach (var b in jobBubbles) HaaIsTheme.SetBubbleState(b, false);
+                    HaaIsTheme.SetBubbleState(pill, true);
+                    selectedMajor = val;
+                    cboMajor.SelectedItem = val;
+                };
+                card.Controls.Add(pill);
+                jobBubbles.Add(pill);
+                bx += 190;
+            }
+
+            card.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг зохиох", 35, 285));
+            txtPassword.Name = "txtPassword";
+            card.Controls.Add(HaaIsTheme.CreateStyledInput(txtPassword, 35, 312, 560, "Хамгийн багадаа 4 тэмдэгт", isPassword: true));
+
+            var btnRegister = HaaIsTheme.CreateButton("Бүртгүүлэх", "btnRegister", 35, 395, primary: true);
+            btnRegister.Size = new Size(270, 46);
+            btnRegister.Click += (s, e) => PerformRegistration();
+            card.Controls.Add(btnRegister);
+
+            var btnBack = HaaIsTheme.CreateButton("Буцах", "btnBack", 325, 395, primary: false);
+            btnBack.Size = new Size(270, 46);
+            btnBack.Click += (s, e) => Close();
+            card.Controls.Add(btnBack);
         }
 
-        private void AddTextField(string label, TextBox textBox, string name, int y)
-        {
-            Controls.Add(HaaIsTheme.CreateLabel(label, 100, y));
-            textBox.Name = name;
-            HaaIsTheme.StyleTextBox(textBox, 100, y + 27, 440);
-            Controls.Add(textBox);
-        }
-
-        private void BtnRegister_Click(object? sender, EventArgs e)
+        private void PerformRegistration()
         {
             if (string.IsNullOrWhiteSpace(txtLastName.Text) ||
                 string.IsNullOrWhiteSpace(txtFirstName.Text) ||
                 string.IsNullOrWhiteSpace(txtStudentID.Text) ||
                 string.IsNullOrWhiteSpace(txtEmail.Text) ||
-                cboMajor.SelectedIndex < 0 ||
+                string.IsNullOrWhiteSpace(selectedMajor) ||
                 string.IsNullOrWhiteSpace(txtPassword.Text))
             {
-                MessageBox.Show("Бүх талбарыг бөглөж, мэргэжлээ сонгоно уу.", "Мэдээлэл дутуу", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Бүх талбарыг бөглөж, инженерийн мэргэжлийн дугуй товчоос сонгоно уу.", "Мэдээлэл дутуу", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             try
             {
-                _ = new MailAddress(txtEmail.Text.Trim());
+                var addr = new MailAddress(txtEmail.Text.Trim());
             }
             catch (FormatException)
             {
@@ -104,32 +139,31 @@ namespace WinFormsApp1
 
             try
             {
-                using var conn = new MySqlConnection(ConnectionString);
-                conn.Open();
+                using (var conn = new MySqlConnection(ConnectionString))
+                {
+                    conn.Open();
 
-                string query = "INSERT INTO students (last_name, first_name, student_id, email, major, password) VALUES (@last, @first, @id, @email, @major, @pwd)";
-                using var cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@last", txtLastName.Text.Trim());
-                cmd.Parameters.AddWithValue("@first", txtFirstName.Text.Trim());
-                cmd.Parameters.AddWithValue("@id", txtStudentID.Text.Trim());
-                cmd.Parameters.AddWithValue("@email", txtEmail.Text.Trim());
-                cmd.Parameters.AddWithValue("@major", cboMajor.SelectedItem?.ToString() ?? "");
-                cmd.Parameters.AddWithValue("@pwd", txtPassword.Text.Trim());
+                    string query = "INSERT INTO students (last_name, first_name, student_id, email, major, password) VALUES (@last, @first, @id, @email, @major, @pwd)";
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@last", txtLastName.Text.Trim());
+                        cmd.Parameters.AddWithValue("@first", txtFirstName.Text.Trim());
+                        cmd.Parameters.AddWithValue("@id", txtStudentID.Text.Trim());
+                        cmd.Parameters.AddWithValue("@email", txtEmail.Text.Trim());
+                        cmd.Parameters.AddWithValue("@major", selectedMajor);
+                        cmd.Parameters.AddWithValue("@pwd", txtPassword.Text.Trim());
 
-                cmd.ExecuteNonQuery();
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
-                MessageBox.Show("Бүртгэл амжилттай хадгалагдлаа! Одоо нэвтэрч орно уу.", "ХААИС", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Бүртгэл амжилттай хадгалагдлаа! Одоо нэвтэрч орно уу.", "Дархан Коосэн", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show("Бүртгэх явцад алдаа гарлаа (Оюутны код давхардсан байж магадгүй): " + ex.Message, "Алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void BtnBack_Click(object? sender, EventArgs e)
-        {
-            Close();
         }
     }
 }
