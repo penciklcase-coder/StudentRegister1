@@ -9,6 +9,10 @@ namespace WinFormsApp1
     public class HomeForm : Form
     {
         private readonly Panel contentArea = new();
+        private readonly Panel whiteHeader = new();
+        private readonly Panel headerCenterGroup = new();
+        private readonly Panel navBar = new();
+        private readonly FlowLayoutPanel navFlow = new();
         private readonly Dictionary<string, Label> menuLabels = new();
         private string activeTab = "НҮҮР";
 
@@ -19,39 +23,39 @@ namespace WinFormsApp1
         {
             Text = "ХААИС - Дархан-Уул аймаг дахь салбар сургууль (Коосэн)";
             HaaIsTheme.StyleForm(this);
-            ClientSize = new Size(1020, 640);
+            ClientSize = new Size(1060, 660);
+            MinimumSize = new Size(960, 580);
 
-            // 1. ДЭЭД УТИЛИТИЙН МӨР
+            // 1. ХАМГИЙН ДЭЭД НОГООН МӨР (Утас зүүн талд, Нэвтрэх товч баруун буланд)
             var topUtilityBar = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 36,
+                Height = 38,
                 BackColor = SabDarkGreen
             };
 
             topUtilityBar.Controls.Add(new Label
             {
                 Text = "📞 70373737   🌐",
-                Location = new Point(25, 8),
+                Location = new Point(25, 9),
                 AutoSize = true,
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
             });
 
-            topUtilityBar.Controls.Add(new Label
+            var lblLang = new Label
             {
                 Text = "MN | EN",
-                Location = new Point(810, 9),
                 AutoSize = true,
                 ForeColor = Color.FromArgb(255, 215, 0),
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold)
-            });
+            };
+            topUtilityBar.Controls.Add(lblLang);
 
             var btnTopLogin = new Button
             {
                 Text = "Системд нэвтрэх",
-                Location = new Point(880, 4),
-                Size = new Size(120, 28),
+                Size = new Size(130, 28),
                 FlatStyle = FlatStyle.Flat,
                 BackColor = Color.FromArgb(163, 217, 68),
                 ForeColor = Color.FromArgb(15, 60, 35),
@@ -68,17 +72,24 @@ namespace WinFormsApp1
             };
             topUtilityBar.Controls.Add(btnTopLogin);
 
-            // 2. ЦАГААН ТОЛГОЙ ХЭСЭГ
-            var whiteHeader = new Panel
+            // Дэлгэц томроход баруун булангийн товчийг яг баруун захад нь барих
+            topUtilityBar.Resize += (s, e) =>
             {
-                Dock = DockStyle.Top,
-                Height = 115,
-                BackColor = Color.White
+                btnTopLogin.Location = new Point(topUtilityBar.Width - 150, 5);
+                lblLang.Location = new Point(topUtilityBar.Width - 215, 10);
             };
+
+            // 2. ЦАГААН ТОЛГОЙ ХЭСЭГ (Дэлгэц томроход яг голдоо байрлана)
+            whiteHeader.Dock = DockStyle.Top;
+            whiteHeader.Height = 115;
+            whiteHeader.BackColor = Color.White;
+
+            headerCenterGroup.Size = new Size(820, 100);
+            headerCenterGroup.BackColor = Color.White;
 
             var logoBox = new Panel
             {
-                Location = new Point(155, 15),
+                Location = new Point(10, 8),
                 Size = new Size(85, 85),
                 BackColor = Color.White
             };
@@ -94,38 +105,44 @@ namespace WinFormsApp1
                 e.Graphics.DrawString("ХААИС\nКООСЭН", new Font("Segoe UI", 8.5F, FontStyle.Bold),
                     new SolidBrush(SabDarkGreen), new RectangleF(12, 12, 60, 60), sf);
             };
-            whiteHeader.Controls.Add(logoBox);
+            headerCenterGroup.Controls.Add(logoBox);
 
-            whiteHeader.Controls.Add(new Label
+            headerCenterGroup.Controls.Add(new Label
             {
                 Text = "ХӨДӨӨ АЖ АХУЙН ИХ СУРГУУЛИЙН ДАРХАН-УУЛ АЙМАГ ДАХЬ",
-                Location = new Point(260, 24),
-                Size = new Size(650, 25),
+                Location = new Point(115, 18),
+                Size = new Size(680, 25),
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Color.FromArgb(90, 100, 95),
-                Font = new Font("Segoe UI", 10.5F, FontStyle.Regular)
+                Font = new Font("Segoe UI", 11F, FontStyle.Regular)
             });
 
-            whiteHeader.Controls.Add(new Label
+            headerCenterGroup.Controls.Add(new Label
             {
                 Text = "ДАРХАН КООСЭН ТЕХНОЛОГИЙН КОЛЛЕЖ",
-                Location = new Point(250, 52),
-                Size = new Size(670, 42),
+                Location = new Point(115, 46),
+                Size = new Size(680, 42),
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = SabDarkGreen,
-                Font = new Font("Segoe UI", 19F, FontStyle.Regular)
+                Font = new Font("Segoe UI", 20F, FontStyle.Regular)
             });
 
-            // 3. НОГООН ЦЭСНИЙ МӨР (Зайг шахаж бүх дэлгэцэнд багтаав)
-            var navBar = new FlowLayoutPanel
+            whiteHeader.Controls.Add(headerCenterGroup);
+            whiteHeader.Resize += (s, e) =>
             {
-                Dock = DockStyle.Top,
-                Height = 38,
-                BackColor = SabMenuGreen,
-                FlowDirection = FlowDirection.LeftToRight,
-                WrapContents = false,
-                Padding = new Padding(35, 10, 0, 0)
+                headerCenterGroup.Left = Math.Max(10, (whiteHeader.Width - headerCenterGroup.Width) / 2);
             };
+
+            // 3. НОГООН ЦЭСНИЙ МӨР (Дэлгэц томроход цэснүүд яг голдоо зэрэгцэнэ)
+            navBar.Dock = DockStyle.Top;
+            navBar.Height = 40;
+            navBar.BackColor = SabMenuGreen;
+
+            navFlow.AutoSize = true;
+            navFlow.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            navFlow.BackColor = Color.Transparent;
+            navFlow.FlowDirection = FlowDirection.LeftToRight;
+            navFlow.WrapContents = false;
 
             string[] menus = {
                 "НҮҮР", "БИДНИЙ ТУХАЙ", "СУРГАЛТ", "НЭЭЛТТЭЙ ИХ СУРГУУЛЬ",
@@ -139,14 +156,20 @@ namespace WinFormsApp1
                     Text = item,
                     AutoSize = true,
                     ForeColor = item == "НҮҮР" ? Color.FromArgb(255, 215, 0) : Color.White,
-                    Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
                     Cursor = Cursors.Hand,
-                    Margin = new Padding(0, 0, 14, 0) // Хоорондох зайг багасгаж багтаамж сайжруулав
+                    Margin = new Padding(10, 0, 10, 0)
                 };
                 lbl.Click += (s, e) => SwitchTab(item);
-                navBar.Controls.Add(lbl);
+                navFlow.Controls.Add(lbl);
                 menuLabels[item] = lbl;
             }
+
+            navBar.Controls.Add(navFlow);
+            navBar.Resize += (s, e) =>
+            {
+                navFlow.Location = new Point(Math.Max(10, (navBar.Width - navFlow.Width) / 2), 11);
+            };
 
             // 4. ГОЛЫН КОНТЕНТ ХЭСЭГ
             contentArea.Dock = DockStyle.Fill;
@@ -173,10 +196,8 @@ namespace WinFormsApp1
 
             if (tabName == "НҮҮР")
             {
-                var heroPanel = new Panel
-                {
-                    Dock = DockStyle.Fill
-                };
+                var heroPanel = new Panel { Dock = DockStyle.Fill };
+                heroPanel.Resize += (s, e) => heroPanel.Invalidate();
 
                 heroPanel.Paint += (s, e) =>
                 {
@@ -204,7 +225,7 @@ namespace WinFormsApp1
                     }
 
                     var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    using var shadowFont = new Font("Segoe UI", 22F, FontStyle.Bold);
+                    using var shadowFont = new Font("Segoe UI", 24F, FontStyle.Bold);
                     g.DrawString("Ногоон их сургууль", shadowFont, new SolidBrush(Color.FromArgb(140, 0, 0, 0)),
                         new RectangleF(2, r.Height / 2 - 28, r.Width, 60), sf);
                     g.DrawString("Ногоон их сургууль", shadowFont, Brushes.White,
@@ -252,26 +273,36 @@ namespace WinFormsApp1
                         break;
                 }
 
-                var infoCard = HaaIsTheme.CreateCard(60, 35, 900, 360);
+                // Картыг дэлгэц томроход дагаж сунадаг (Responsive) болгов
+                int cardW = Math.Max(700, contentArea.Width - 160);
+                int cardH = Math.Max(340, contentArea.Height - 80);
+                var infoCard = HaaIsTheme.CreateCard(80, 35, cardW, cardH);
+                infoCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                infoCard.Resize += (s, e) => infoCard.Invalidate();
+
                 infoCard.Controls.Add(new Label
                 {
                     Text = title,
-                    Location = new Point(35, 30),
+                    Location = new Point(40, 35),
                     AutoSize = true,
-                    Font = new Font("Segoe UI", 16F, FontStyle.Bold),
+                    Font = new Font("Segoe UI", 18F, FontStyle.Bold),
                     ForeColor = SabDarkGreen
                 });
-                infoCard.Controls.Add(new Label
+
+                var lblBody = new Label
                 {
                     Text = body,
-                    Location = new Point(35, 85),
-                    Size = new Size(820, 190),
-                    Font = new Font("Segoe UI", 11F),
+                    Location = new Point(40, 95),
+                    Size = new Size(cardW - 80, cardH - 180),
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                    Font = new Font("Segoe UI", 12F),
                     ForeColor = Color.FromArgb(40, 50, 45)
-                });
+                };
+                infoCard.Controls.Add(lblBody);
 
-                var btnBack = HaaIsTheme.CreateButton("← Нүүр хуудас руу буцах", "btnBack", 35, 290, primary: true);
-                btnBack.Size = new Size(230, 42);
+                var btnBack = HaaIsTheme.CreateButton("← Нүүр хуудас руу буцах", "btnBack", 40, cardH - 70, primary: true);
+                btnBack.Size = new Size(230, 44);
+                btnBack.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
                 btnBack.Click += (s, e) => SwitchTab("НҮҮР");
                 infoCard.Controls.Add(btnBack);
 

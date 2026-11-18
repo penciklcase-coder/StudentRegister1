@@ -9,38 +9,62 @@ namespace WinFormsApp1
     {
         private readonly TextBox txtTeacherID = new();
         private readonly TextBox txtPassword = new();
+        private readonly Panel centerCard;
         private const string ConnectionString = "Server=localhost;Database=haais_db;Uid=root;Pwd=;";
 
         public TeacherLoginForm()
         {
-            Text = "Коосэн - Нэвтрэх";
+            Text = "Коосэн - Багш / Админ Нэвтрэх";
             HaaIsTheme.StyleForm(this);
-            ClientSize = new Size(450, 400);
+            ClientSize = new Size(760, 520);
+            MinimumSize = new Size(520, 460);
+            BackColor = Color.FromArgb(245, 248, 246);
 
-            var header = new Panel { Dock = DockStyle.Top, Height = 90, BackColor = HaaIsTheme.Green };
+            var header = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 80,
+                BackColor = HaaIsTheme.Green
+            };
             header.Controls.Add(new Label
             {
-                Text = "Нэвтрэх",
+                Text = "Багш / Админ Системд Нэвтрэх",
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = HaaIsTheme.White,
                 Font = new Font("Segoe UI", 16F, FontStyle.Bold)
             });
-            Controls.Add(header);
 
-            Controls.Add(HaaIsTheme.CreateLabel("ID эсвэл Нэр", 50, 115));
-            HaaIsTheme.StyleTextBox(txtTeacherID, 50, 145, 330);
-            Controls.Add(txtTeacherID);
+            // Голын карт (Дэлгэц томроход яг голд нь байрлана)
+            centerCard = HaaIsTheme.CreateCard(165, 115, 430, 340);
 
-            Controls.Add(HaaIsTheme.CreateLabel("Нууц үг", 50, 195));
-            HaaIsTheme.StyleTextBox(txtPassword, 50, 225, 330);
+            centerCard.Controls.Add(HaaIsTheme.CreateLabel("ID эсвэл Нэр:", 50, 35));
+            HaaIsTheme.StyleTextBox(txtTeacherID, 50, 62, 330);
+            centerCard.Controls.Add(txtTeacherID);
+
+            centerCard.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 50, 120));
+            HaaIsTheme.StyleTextBox(txtPassword, 50, 147, 330);
             txtPassword.PasswordChar = '●';
-            Controls.Add(txtPassword);
+            centerCard.Controls.Add(txtPassword);
 
-            var btnLogin = HaaIsTheme.CreateButton("Нэвтрэх", "btnLogin", 50, 300, primary: true);
+            var btnLogin = HaaIsTheme.CreateButton("Нэвтрэх", "btnLogin", 50, 215, primary: true);
             btnLogin.Size = new Size(330, 44);
             btnLogin.Click += BtnLogin_Click;
-            Controls.Add(btnLogin);
+            centerCard.Controls.Add(btnLogin);
+
+            Controls.Add(centerCard);
+            Controls.Add(header);
+
+            Resize += (s, e) => CenterLoginCard();
+            Load += (s, e) => CenterLoginCard();
+        }
+
+        private void CenterLoginCard()
+        {
+            centerCard.Location = new Point(
+                Math.Max(20, (ClientSize.Width - centerCard.Width) / 2),
+                Math.Max(95, 80 + (ClientSize.Height - 80 - centerCard.Height) / 2)
+            );
         }
 
         private void BtnLogin_Click(object? sender, EventArgs e)
@@ -56,7 +80,6 @@ namespace WinFormsApp1
 
             if (user == "admin" && pass == "123")
             {
-                MessageBox.Show("Админ эрхээр амжилттай нэвтэрлээ!", "Коосэн", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Hide();
                 new ManagerPanelForm().ShowDialog();
                 Close();

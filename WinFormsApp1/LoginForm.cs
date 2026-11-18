@@ -8,6 +8,10 @@ namespace WinFormsApp1
 {
     public class LoginForm : Form
     {
+        private readonly Panel leftPanel = new();
+        private readonly Panel rightPanel = new();
+        private readonly Panel loginBox = new(); // Баруун талын голд байрлах багц
+
         private readonly TextBox txtUserID = new();
         private readonly TextBox txtPassword = new();
         private readonly Label lblUserPrompt = new();
@@ -23,37 +27,39 @@ namespace WinFormsApp1
         {
             Text = "Сайтад нэвтрэх | LMS";
             HaaIsTheme.StyleForm(this);
-            ClientSize = new Size(980, 580);
+            ClientSize = new Size(1020, 620);
+            MinimumSize = new Size(900, 560);
 
             // =================================================================
-            // 1. ЗҮҮН ТАЛЫН НОГООН САМБАР (Зураг 1-ийн зүүн тал яг хэвээрээ)
+            // 1. ЗҮҮН ТАЛЫН НОГООН САМБАР (Дэлгэцийн яг 50%-ийг эзэлнэ)
             // =================================================================
-            var leftPanel = new Panel
-            {
-                Dock = DockStyle.Left,
-                Width = 490,
-                BackColor = LmsGreen
-            };
+            leftPanel.Dock = DockStyle.Left;
+            leftPanel.Width = ClientSize.Width / 2;
+            leftPanel.BackColor = LmsGreen;
 
             leftPanel.Paint += (s, e) =>
             {
                 Graphics g = e.Graphics;
                 g.SmoothingMode = SmoothingMode.AntiAlias;
 
-                // Арын том бүдэг цагираг болон долгион зураас (Зураг 1 шиг)
-                using var circlePen = new Pen(Color.FromArgb(25, 255, 255, 255), 1.5f);
-                g.DrawEllipse(circlePen, 90, -110, 320, 320);
-                g.DrawEllipse(circlePen, 40, -160, 420, 420);
+                int w = leftPanel.Width;
+                int h = leftPanel.Height;
 
-                // Доод долгионтой шугамнууд
+                // Дэлгэц томроход текстийг босоо болон хэвтээ тэнхлэгт автоматаар голлуулах
+                int baseX = Math.Max(40, (w - 430) / 2);
+                int baseY = Math.Max(120, (h - 260) / 2);
+
+                using var circlePen = new Pen(Color.FromArgb(25, 255, 255, 255), 1.5f);
+                g.DrawEllipse(circlePen, w / 2 - 140, -110, 340, 340);
+                g.DrawEllipse(circlePen, w / 2 - 190, -160, 440, 440);
+
                 for (int i = 0; i < 6; i++)
                 {
-                    int y = 430 + i * 24;
-                    g.DrawBezier(circlePen, new Point(0, y), new Point(180, y - 20), new Point(320, y + 20), new Point(490, y - 5));
+                    int y = h - 160 + i * 24;
+                    g.DrawBezier(circlePen, new Point(0, y), new Point(w / 3, y - 25), new Point(w * 2 / 3, y + 25), new Point(w, y - 5));
                 }
 
-                // "СУРГАЛТЫН ДИЖИТАЛ ОРЧИН" дугуй хүрээтэй шошго
-                Rectangle badgeRect = new Rectangle(35, 145, 240, 32);
+                Rectangle badgeRect = new Rectangle(baseX, baseY, 240, 32);
                 using (GraphicsPath badgePath = HaaIsTheme.GetRoundPath(badgeRect, 15))
                 using (Pen badgePen = new Pen(Color.FromArgb(120, 255, 255, 255), 1.2f))
                 {
@@ -62,38 +68,34 @@ namespace WinFormsApp1
                 TextRenderer.DrawText(g, "СУРГАЛТЫН ДИЖИТАЛ ОРЧИН", new Font("Segoe UI", 9F, FontStyle.Regular),
                     badgeRect, Color.FromArgb(220, 245, 230), TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
 
-                // Гол гарчигнууд
-                g.DrawString("ХӨДӨӨ АЖ АХУЙН ИХ СУРГУУЛИЙН", new Font("Segoe UI", 14F, FontStyle.Bold),
-                    Brushes.White, new PointF(32, 198));
+                g.DrawString("ХӨДӨӨ АЖ АХУЙН ИХ СУРГУУЛИЙН", new Font("Segoe UI", 14.5F, FontStyle.Bold),
+                    Brushes.White, new PointF(baseX - 3, baseY + 52));
 
-                // "ДАРХАН-УУЛ" (Ногоон-шар) + "АЙМАГ ДАХЬ" (Цагаан)
                 g.DrawString("ДАРХАН-УУЛ", new Font("Segoe UI", 22F, FontStyle.Bold),
-                    new SolidBrush(LimeAccent), new PointF(30, 232));
+                    new SolidBrush(LimeAccent), new PointF(baseX - 5, baseY + 86));
                 g.DrawString("АЙМАГ ДАХЬ", new Font("Segoe UI", 22F, FontStyle.Bold),
-                    Brushes.White, new PointF(238, 232));
+                    Brushes.White, new PointF(baseX + 203, baseY + 86));
 
                 g.DrawString("САЛБАР СУРГУУЛЬ • КООСЭН", new Font("Segoe UI", 18F, FontStyle.Bold),
-                    Brushes.White, new PointF(32, 276));
+                    Brushes.White, new PointF(baseX - 3, baseY + 132));
 
-                // Доод 3 зууван (pill) тэмдэглэгээ: ХИЧЭЭЛ | ДААЛГАВАР | ДҮН
-                DrawFeaturePill(g, 35, 345, 95, "📖 ХИЧЭЭЛ");
-                DrawFeaturePill(g, 140, 345, 115, "☑ ДААЛГАВАР");
-                DrawFeaturePill(g, 265, 345, 80, "📈 ДҮН");
+                DrawFeaturePill(g, baseX, baseY + 200, 95, "📖 ХИЧЭЭЛ");
+                DrawFeaturePill(g, baseX + 105, baseY + 200, 115, "☑ ДААЛГАВАР");
+                DrawFeaturePill(g, baseX + 230, baseY + 200, 80, "📈 ДҮН");
             };
 
             // =================================================================
-            // 2. БАРУУН ТАЛЫН ЦАГААН НЭВТРЭХ ХЭСЭГ (Зураг 1-ийн баруун тал)
+            // 2. БАРУУН ТАЛЫН ЦАГААН САМБАР (Доторх loginBox нь яг голд байрлана)
             // =================================================================
-            var rightPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BackColor = Color.White
-            };
+            rightPanel.Dock = DockStyle.Fill;
+            rightPanel.BackColor = Color.White;
 
-            // Дээд дугуй ХААИС/Коосэн лого
+            loginBox.Size = new Size(420, 500);
+            loginBox.BackColor = Color.White;
+
             var logoPanel = new Panel
             {
-                Location = new Point(195, 45),
+                Location = new Point(160, 10),
                 Size = new Size(100, 100),
                 BackColor = Color.White
             };
@@ -108,79 +110,92 @@ namespace WinFormsApp1
                 e.Graphics.DrawString("ХААИС\nКООСЭН", new Font("Segoe UI", 9.5F, FontStyle.Bold),
                     new SolidBrush(LmsGreen), new RectangleF(15, 15, 68, 68), sf);
             };
-            rightPanel.Controls.Add(logoPanel);
+            loginBox.Controls.Add(logoPanel);
 
-            rightPanel.Controls.Add(new Label
+            loginBox.Controls.Add(new Label
             {
                 Text = "Сургалтын удирдлагын системд нэвтрэх ↴",
-                Location = new Point(95, 160),
+                Location = new Point(50, 125),
                 AutoSize = true,
                 ForeColor = Color.FromArgb(80, 90, 85),
                 Font = new Font("Segoe UI", 9.5F)
             });
 
-            // Оюутан эсвэл Багш/Админ сонгох
-            btnRoleStudent = HaaIsTheme.CreateButton("Оюутан", "btnRoleStudent", 95, 190, primary: true);
-            btnRoleStudent.Size = new Size(145, 36);
+            btnRoleStudent = HaaIsTheme.CreateButton("Оюутан", "btnRoleStudent", 50, 155, primary: true);
+            btnRoleStudent.Size = new Size(155, 38);
             btnRoleStudent.Click += (s, e) => SwitchRole(true);
-            rightPanel.Controls.Add(btnRoleStudent);
+            loginBox.Controls.Add(btnRoleStudent);
 
-            btnRoleTeacher = HaaIsTheme.CreateButton("Багш / Админ", "btnRoleTeacher", 250, 190, primary: false);
-            btnRoleTeacher.Size = new Size(145, 36);
+            btnRoleTeacher = HaaIsTheme.CreateButton("Багш / Админ", "btnRoleTeacher", 215, 155, primary: false);
+            btnRoleTeacher.Size = new Size(155, 38);
             btnRoleTeacher.Click += (s, e) => SwitchRole(false);
-            rightPanel.Controls.Add(btnRoleTeacher);
+            loginBox.Controls.Add(btnRoleTeacher);
 
-            // Нэвтрэх нэр / Код болон Нууц үг
-            lblUserPrompt = HaaIsTheme.CreateLabel("Оюутны код (OpenID):", 95, 240);
-            rightPanel.Controls.Add(lblUserPrompt);
+            lblUserPrompt = HaaIsTheme.CreateLabel("Оюутны код (OpenID):", 50, 210);
+            loginBox.Controls.Add(lblUserPrompt);
 
-            HaaIsTheme.StyleTextBox(txtUserID, 95, 265, 300);
-            rightPanel.Controls.Add(txtUserID);
+            HaaIsTheme.StyleTextBox(txtUserID, 50, 235, 320);
+            loginBox.Controls.Add(txtUserID);
 
-            rightPanel.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 95, 308));
+            loginBox.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 50, 280));
             txtPassword.PasswordChar = '●';
-            HaaIsTheme.StyleTextBox(txtPassword, 95, 333, 300);
-            rightPanel.Controls.Add(txtPassword);
+            HaaIsTheme.StyleTextBox(txtPassword, 50, 305, 320);
+            loginBox.Controls.Add(txtPassword);
 
-            // Нэвтрэх товч
-            var btnLogin = HaaIsTheme.CreateButton("Системд нэвтрэх", "btnLogin", 95, 380, primary: true);
-            btnLogin.Size = new Size(300, 42);
+            var btnLogin = HaaIsTheme.CreateButton("Системд нэвтрэх", "btnLogin", 50, 355, primary: true);
+            btnLogin.Size = new Size(320, 44);
             btnLogin.Click += BtnLogin_Click;
-            rightPanel.Controls.Add(btnLogin);
+            loginBox.Controls.Add(btnLogin);
 
-            // Зураг 1 дээрх доод тайлбар текстүүд
-            rightPanel.Controls.Add(new Label
+            loginBox.Controls.Add(new Label
             {
                 Text = "Нууц үгээ мартсан бол academic@sab.edu.mn хаягаар холбогдоно уу.",
-                Location = new Point(55, 440),
-                Size = new Size(380, 22),
+                Location = new Point(10, 415),
+                Size = new Size(400, 22),
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Color.FromArgb(110, 120, 115),
                 Font = new Font("Segoe UI", 8.2F)
             });
 
-            rightPanel.Controls.Add(new Label
+            loginBox.Controls.Add(new Label
             {
                 Text = "Монгол ⌄",
-                Location = new Point(195, 475),
+                Location = new Point(160, 445),
                 Size = new Size(100, 20),
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = LmsGreen,
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold)
             });
 
-            rightPanel.Controls.Add(new Label
+            loginBox.Controls.Add(new Label
             {
                 Text = "Күүки санах ойн мэдэгдэл",
-                Location = new Point(145, 510),
+                Location = new Point(110, 475),
                 Size = new Size(200, 20),
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = Color.Gray,
                 Font = new Font("Segoe UI", 8.2F)
             });
 
+            rightPanel.Controls.Add(loginBox);
+
+            // Цонх томрох/жижгэрэх бүрд 50%/50% хувааж, loginBox-ийг баруун талын яг голд байрлуулах
+            Resize += (s, e) => AdjustResponsiveLayout();
+            Load += (s, e) => AdjustResponsiveLayout();
+
             Controls.Add(rightPanel);
             Controls.Add(leftPanel);
+        }
+
+        private void AdjustResponsiveLayout()
+        {
+            leftPanel.Width = ClientSize.Width / 2;
+            leftPanel.Invalidate();
+
+            loginBox.Location = new Point(
+                Math.Max(10, (rightPanel.Width - loginBox.Width) / 2),
+                Math.Max(10, (rightPanel.Height - loginBox.Height) / 2)
+            );
         }
 
         private void DrawFeaturePill(Graphics g, int x, int y, int w, string text)
@@ -200,20 +215,19 @@ namespace WinFormsApp1
             txtUserID.Clear();
             txtPassword.Clear();
 
-            Control rightPanel = Controls[0];
-            rightPanel.Controls.Remove(btnRoleStudent);
-            rightPanel.Controls.Remove(btnRoleTeacher);
+            loginBox.Controls.Remove(btnRoleStudent);
+            loginBox.Controls.Remove(btnRoleTeacher);
 
-            btnRoleStudent = HaaIsTheme.CreateButton("Оюутан", "btnRoleStudent", 95, 190, primary: studentMode);
-            btnRoleStudent.Size = new Size(145, 36);
+            btnRoleStudent = HaaIsTheme.CreateButton("Оюутан", "btnRoleStudent", 50, 155, primary: studentMode);
+            btnRoleStudent.Size = new Size(155, 38);
             btnRoleStudent.Click += (s, e) => SwitchRole(true);
 
-            btnRoleTeacher = HaaIsTheme.CreateButton("Багш / Админ", "btnRoleTeacher", 250, 190, primary: !studentMode);
-            btnRoleTeacher.Size = new Size(145, 36);
+            btnRoleTeacher = HaaIsTheme.CreateButton("Багш / Админ", "btnRoleTeacher", 215, 155, primary: !studentMode);
+            btnRoleTeacher.Size = new Size(155, 38);
             btnRoleTeacher.Click += (s, e) => SwitchRole(false);
 
-            rightPanel.Controls.Add(btnRoleStudent);
-            rightPanel.Controls.Add(btnRoleTeacher);
+            loginBox.Controls.Add(btnRoleStudent);
+            loginBox.Controls.Add(btnRoleTeacher);
         }
 
         private void BtnLogin_Click(object? sender, EventArgs e)
