@@ -11,6 +11,11 @@ namespace WinFormsApp1
         private readonly TextBox txtPass = new();
         private const string ConnectionString = "Server=localhost;Database=haais_db;Uid=root;Pwd=;";
 
+        private void InitializeComponent()
+        {
+
+        }
+
         public ManagerLoginForm()
         {
             Text = "ХААИС - Менежерийн нэвтрэх";
@@ -36,7 +41,8 @@ namespace WinFormsApp1
             var btnLogin = HaaIsTheme.CreateButton("Нэвтрэх", "btnLogin", 50, 300, primary: true);
             btnLogin.BackColor = Color.FromArgb(120, 40, 40);
             btnLogin.Size = new Size(330, 44);
-            btnLogin.Click += (s, e) => {
+            btnLogin.Click += (s, e) =>
+            {
                 if (txtUser.Text.Trim() == "admin" && txtPass.Text.Trim() == "123")
                 {
                     Hide();

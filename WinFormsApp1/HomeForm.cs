@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace WinFormsApp1
@@ -9,178 +10,275 @@ namespace WinFormsApp1
     {
         private readonly Panel contentArea = new();
         private readonly Dictionary<string, Label> menuLabels = new();
+        private string activeTab = "НҮҮР";
+
+        private static readonly Color SabDarkGreen = Color.FromArgb(20, 82, 50);
+        private static readonly Color SabMenuGreen = Color.FromArgb(24, 90, 56);
 
         public HomeForm()
         {
-            Text = "ХААИС - Оюутны Нэгдсэн Систем";
+            Text = "ХААИС - Дархан-Уул аймаг дахь салбар сургууль (Коосэн)";
             HaaIsTheme.StyleForm(this);
-            ClientSize = new Size(840, 560);
+            ClientSize = new Size(1020, 640);
 
-            // 1. Дээд ногоон толгой хэсэг
-            var topBanner = new Panel
+            // 1. ДЭЭД УТИЛИТИЙН МӨР
+            var topUtilityBar = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 85,
-                BackColor = HaaIsTheme.Green
+                Height = 36,
+                BackColor = SabDarkGreen
             };
-            topBanner.Controls.Add(new Label
+
+            topUtilityBar.Controls.Add(new Label
             {
-                Text = "ХӨДӨӨ АЖ АХУЙН ИХ СУРГУУЛЬ\nMongolian University of Life Sciences",
-                Location = new Point(30, 20),
+                Text = "📞 70373737   🌐",
+                Location = new Point(25, 8),
                 AutoSize = true,
-                ForeColor = HaaIsTheme.White,
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold)
+                ForeColor = Color.White,
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
             });
-            Controls.Add(topBanner);
 
-            // 2. Вэб маягийн цэсний мөр (Дарахад доорх контент солигдоно)
-            var subMenu = new Panel
+            topUtilityBar.Controls.Add(new Label
+            {
+                Text = "MN | EN",
+                Location = new Point(810, 9),
+                AutoSize = true,
+                ForeColor = Color.FromArgb(255, 215, 0),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
+            });
+
+            var btnTopLogin = new Button
+            {
+                Text = "Системд нэвтрэх",
+                Location = new Point(880, 4),
+                Size = new Size(120, 28),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(163, 217, 68),
+                ForeColor = Color.FromArgb(15, 60, 35),
+                Font = new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnTopLogin.FlatAppearance.BorderSize = 0;
+            btnTopLogin.Click += (s, e) =>
+            {
+                using var loginPortal = new LoginForm();
+                Hide();
+                loginPortal.ShowDialog();
+                Show();
+            };
+            topUtilityBar.Controls.Add(btnTopLogin);
+
+            // 2. ЦАГААН ТОЛГОЙ ХЭСЭГ
+            var whiteHeader = new Panel
             {
                 Dock = DockStyle.Top,
-                Height = 42,
-                BackColor = Color.FromArgb(40, 110, 85)
+                Height = 115,
+                BackColor = Color.White
             };
 
-            string[] menuItems = { "Нүүр", "Удирдах зөвлөл", "Сургалт", "Эрдэм шинжилгээ", "Оюутан", "Холбоо барих" };
-            int menuX = 25;
-            foreach (var item in menuItems)
+            var logoBox = new Panel
             {
-                var lblMenu = new Label
+                Location = new Point(155, 15),
+                Size = new Size(85, 85),
+                BackColor = Color.White
+            };
+            logoBox.Paint += (s, e) =>
+            {
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                using var penOuter = new Pen(SabDarkGreen, 3f);
+                using var penInner = new Pen(SabDarkGreen, 1.5f);
+                e.Graphics.DrawEllipse(penOuter, 4, 4, 76, 76);
+                e.Graphics.DrawEllipse(penInner, 12, 12, 60, 60);
+
+                var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                e.Graphics.DrawString("ХААИС\nКООСЭН", new Font("Segoe UI", 8.5F, FontStyle.Bold),
+                    new SolidBrush(SabDarkGreen), new RectangleF(12, 12, 60, 60), sf);
+            };
+            whiteHeader.Controls.Add(logoBox);
+
+            whiteHeader.Controls.Add(new Label
+            {
+                Text = "ХӨДӨӨ АЖ АХУЙН ИХ СУРГУУЛИЙН ДАРХАН-УУЛ АЙМАГ ДАХЬ",
+                Location = new Point(260, 24),
+                Size = new Size(650, 25),
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.FromArgb(90, 100, 95),
+                Font = new Font("Segoe UI", 10.5F, FontStyle.Regular)
+            });
+
+            whiteHeader.Controls.Add(new Label
+            {
+                Text = "ДАРХАН КООСЭН ТЕХНОЛОГИЙН КОЛЛЕЖ",
+                Location = new Point(250, 52),
+                Size = new Size(670, 42),
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = SabDarkGreen,
+                Font = new Font("Segoe UI", 19F, FontStyle.Regular)
+            });
+
+            // 3. НОГООН ЦЭСНИЙ МӨР (Зайг шахаж бүх дэлгэцэнд багтаав)
+            var navBar = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Top,
+                Height = 38,
+                BackColor = SabMenuGreen,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Padding = new Padding(35, 10, 0, 0)
+            };
+
+            string[] menus = {
+                "НҮҮР", "БИДНИЙ ТУХАЙ", "СУРГАЛТ", "НЭЭЛТТЭЙ ИХ СУРГУУЛЬ",
+                "СУДАЛГАА, ХАМТЫН АЖИЛЛАГАА", "СУРГУУЛИЙН ОРЧИН", "ОЮУТАН", "ЭЛСЭЛТ", "ТӨГСӨГЧ"
+            };
+
+            foreach (var item in menus)
+            {
+                var lbl = new Label
                 {
                     Text = item,
-                    Location = new Point(menuX, 11),
                     AutoSize = true,
-                    ForeColor = item == "Нүүр" ? HaaIsTheme.Yellow : Color.White,
-                    Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
-                    Cursor = Cursors.Hand
+                    ForeColor = item == "НҮҮР" ? Color.FromArgb(255, 215, 0) : Color.White,
+                    Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                    Cursor = Cursors.Hand,
+                    Margin = new Padding(0, 0, 14, 0) // Хоорондох зайг багасгаж багтаамж сайжруулав
                 };
-                lblMenu.Click += (s, e) => SwitchTab(item);
-                subMenu.Controls.Add(lblMenu);
-                menuLabels[item] = lblMenu;
-                menuX += 130;
+                lbl.Click += (s, e) => SwitchTab(item);
+                navBar.Controls.Add(lbl);
+                menuLabels[item] = lbl;
             }
-            Controls.Add(subMenu);
 
-            // 3. Доод холбоо барих мөр
-            var footer = new Label
-            {
-                Text = "ХОЛБОО БАРИХ: 📞 976-70001077 | ✉️ info@muls.edu.mn | 🌐 muls.edu.mn",
-                Dock = DockStyle.Bottom,
-                Height = 35,
-                TextAlign = ContentAlignment.MiddleCenter,
-                BackColor = Color.FromArgb(240, 240, 240),
-                ForeColor = Color.DarkSlateGray,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
-            };
-            Controls.Add(footer);
-
-            // 4. Голын мэдээлэл солигдох хэсэг
+            // 4. ГОЛЫН КОНТЕНТ ХЭСЭГ
             contentArea.Dock = DockStyle.Fill;
-            contentArea.BackColor = HaaIsTheme.White;
-            Controls.Add(contentArea);
-            contentArea.BringToFront();
+            contentArea.BackColor = Color.FromArgb(245, 248, 246);
 
-            // Анх ачаалахад "Нүүр" цэсийг харуулна
-            SwitchTab("Нүүр");
+            Controls.Add(contentArea);
+            Controls.Add(navBar);
+            Controls.Add(whiteHeader);
+            Controls.Add(topUtilityBar);
+
+            SwitchTab("НҮҮР");
         }
 
         private void SwitchTab(string tabName)
         {
-            // Идэвхтэй цэсний өнгийг шар болгож ялгана
+            activeTab = tabName;
             foreach (var pair in menuLabels)
             {
-                pair.Value.ForeColor = pair.Key == tabName ? HaaIsTheme.Yellow : Color.White;
+                pair.Value.ForeColor = pair.Key == tabName ? Color.FromArgb(255, 215, 0) : Color.White;
             }
 
+            contentArea.SuspendLayout();
             contentArea.Controls.Clear();
 
-            if (tabName == "Нүүр")
+            if (tabName == "НҮҮР")
             {
-                contentArea.Controls.Add(new Label
+                var heroPanel = new Panel
                 {
-                    Text = "ХААИС-ийн Нэгдсэн Мэдээллийн Системд Тавтай Морилно Уу",
-                    Location = new Point(140, 45),
-                    AutoSize = true,
-                    Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                    ForeColor = HaaIsTheme.Green
-                });
-
-                var btnStudent = HaaIsTheme.CreateButton("👨‍🎓 Оюутны Нэвтрэх / Бүртгэл", "btnStudent", 220, 115, primary: true);
-                btnStudent.Size = new Size(400, 50);
-                btnStudent.Click += (s, e) =>
-                {
-                    using var login = new LoginForm();
-                    Hide();
-                    login.ShowDialog();
-                    Show();
+                    Dock = DockStyle.Fill
                 };
-                contentArea.Controls.Add(btnStudent);
 
-                var btnTeacher = HaaIsTheme.CreateButton("👨‍🏫 Багшийн Портал (Мөн админ орох)", "btnTeacher", 220, 185, primary: false);
-                btnTeacher.Size = new Size(400, 50);
-                btnTeacher.Click += (s, e) =>
+                heroPanel.Paint += (s, e) =>
                 {
-                    using var tLogin = new TeacherLoginForm();
-                    Hide();
-                    tLogin.ShowDialog();
-                    Show();
+                    Graphics g = e.Graphics;
+                    g.SmoothingMode = SmoothingMode.AntiAlias;
+                    Rectangle r = heroPanel.ClientRectangle;
+                    if (r.Width == 0 || r.Height == 0) return;
+
+                    using (var bgBrush = new LinearGradientBrush(r,
+                        Color.FromArgb(65, 42, 22), Color.FromArgb(22, 55, 32), LinearGradientMode.ForwardDiagonal))
+                    {
+                        g.FillRectangle(bgBrush, r);
+                    }
+
+                    Point[] hills1 = {
+                        new Point(0, r.Height),
+                        new Point(0, r.Height / 3),
+                        new Point(r.Width / 2, r.Height / 2 + 20),
+                        new Point(r.Width, r.Height / 4),
+                        new Point(r.Width, r.Height)
+                    };
+                    using (var hillBrush1 = new SolidBrush(Color.FromArgb(80, 130, 75, 30)))
+                    {
+                        g.FillPolygon(hillBrush1, hills1);
+                    }
+
+                    var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    using var shadowFont = new Font("Segoe UI", 22F, FontStyle.Bold);
+                    g.DrawString("Ногоон их сургууль", shadowFont, new SolidBrush(Color.FromArgb(140, 0, 0, 0)),
+                        new RectangleF(2, r.Height / 2 - 28, r.Width, 60), sf);
+                    g.DrawString("Ногоон их сургууль", shadowFont, Brushes.White,
+                        new RectangleF(0, r.Height / 2 - 30, r.Width, 60), sf);
+
+                    int dotX = r.Width / 2 - 20;
+                    int dotY = r.Height - 28;
+                    g.FillEllipse(Brushes.LightGray, dotX, dotY, 7, 7);
+                    g.FillEllipse(Brushes.White, dotX + 15, dotY - 1, 9, 9);
+                    g.FillEllipse(Brushes.LightGray, dotX + 32, dotY, 7, 7);
                 };
-                contentArea.Controls.Add(btnTeacher);
+
+                contentArea.Controls.Add(heroPanel);
             }
             else
             {
-                // Бусад цэсүүд дээр дарахад тухайн хэсгийн мэдээллийг харуулна
-                string title = "";
+                string title = tabName;
                 string body = "";
 
                 switch (tabName)
                 {
-                    case "Удирдах зөвлөл":
-                        title = "ХААИС-ийн Удирдах Зөвлөл ба Бүтэц";
-                        body = "• Ректорын ажлын алба\n• Сургалт, эрх зүйн газар\n• Эрдэм шинжилгээ, инновацын газар\n• Санхүү, хөрөнгө оруулалтын газар\n• Бүрэлдэхүүн 6 сургууль, эрдэм шинжилгээний 4 хүрээлэн";
+                    case "БИДНИЙ ТУХАЙ":
+                        body = "• Сургуулийн түүхэн замнал ба эрхэм зорилго\n\n• Захирлын мэндчилгээ\n\n• Удирдлагын зөвлөл болон бүтэц зохион байгуулалт";
                         break;
-                    case "Сургалт":
-                        title = "Сургалтын Хөтөлбөр ба Мэргэжлүүд";
-                        body = "• Бакалаврын өдрийн болон эчнээ хөтөлбөр (40+ мэргэжил)\n• Магистр, докторын сургалт\n• Хамтарсан 2+2 олон улсын хөтөлбөрүүд\n• Улирлын хичээл сонголт, кредит тооцооны систем";
+                    case "СУРГАЛТ":
+                        body = "• 5 жилийн инженерийн нэгдсэн хөтөлбөр\n\n• Мэдээллийн технологи, Програм хангамж\n\n• Агроэкологи, Инженерчлэлийн салбар хөтөлбөрүүд";
                         break;
-                    case "Эрдэм шинжилгээ":
-                        title = "Эрдэм Шинжилгээ, Инновац";
-                        body = "• Хөдөө аж ахуйн биотехнологийн судалгаа\n• Мал эмнэлгийн хүрээлэнгийн шинэ бүтээлүүд\n• Ургамал газар тариалангийн туршилт судалгааны төв\n• Оюутны эрдэм шинжилгээний бага хурал (Жил бүр)";
+                    case "НЭЭЛТТЭЙ ИХ СУРГУУЛЬ":
+                        body = "• Нээлттэй боловсролын эх сурвалжууд\n\n• Цахим номын сан болон лабораторийн орчин";
                         break;
-                    case "Оюутан":
-                        title = "Оюутны Үйлчилгээ ба Тэтгэлэг";
-                        body = "• Оюутны дотуур байрны бүртгэл\n• Ректорын нэрэмжит тэтгэлэг болон Боловсролын зээлийн сан\n• Оюутны клуб, спортын секцүүд\n• Хичээлийн хуваарь, дүнгийн мэдээллийг 'Нүүр' хэсгээс нэвтэрч харна уу.";
+                    case "СУДАЛГАА, ХАМТЫН АЖИЛЛАГАА":
+                        body = "• Япон улсын Коосэн сургуулиудтай хэрэгжүүлж буй оюутан солилцоо\n\n• Робокон болон инновацын төслүүд";
                         break;
-                    case "Холбоо барих":
-                        title = "Хаяг Байршил ба Холбоо Барих";
-                        body = "📍 Хаяг: Улаанбаатар хот, Хан-Уул дүүрэг, 11-р хороо, Зайсан\n📞 Утас: 976-70001077, 976-75107777\n✉️ Цахим шуудан: info@muls.edu.mn\n🕒 Ажлын цаг: Даваа - Баасан 08:30 - 17:30";
+                    case "СУРГУУЛИЙН ОРЧИН":
+                        body = "• Хичээлийн байр, орчин үеийн лабораториуд\n\n• Оюутны дотуур байр, спорт заал, номын сан";
+                        break;
+                    case "ОЮУТАН":
+                        body = "• Оюутны зөвлөл, клуб секцүүд\n\n• Тэтгэлэгт хөтөлбөрүүд\n\n• (Дүн болон хичээл сонголтыг баруун дээд булангийн 'Системд нэвтрэх' товчоор орж харна уу)";
+                        break;
+                    case "ЭЛСЭЛТ":
+                        body = "• Элсэлтийн журам болон бүртгэлийн хугацаа\n\n• Мэргэжил сонголтын зөвлөгөө";
+                        break;
+                    case "ТӨГСӨГЧ":
+                        body = "• Төгсөгчдийн холбоо\n\n• Ажлын байрны зуучлал болон төгсөгчдийн амжилт";
                         break;
                 }
 
-                contentArea.Controls.Add(new Label
+                var infoCard = HaaIsTheme.CreateCard(60, 35, 900, 360);
+                infoCard.Controls.Add(new Label
                 {
                     Text = title,
-                    Location = new Point(50, 35),
+                    Location = new Point(35, 30),
                     AutoSize = true,
-                    Font = new Font("Segoe UI", 15F, FontStyle.Bold),
-                    ForeColor = HaaIsTheme.Green
+                    Font = new Font("Segoe UI", 16F, FontStyle.Bold),
+                    ForeColor = SabDarkGreen
                 });
-
-                var infoBox = new Label
+                infoCard.Controls.Add(new Label
                 {
                     Text = body,
-                    Location = new Point(50, 85),
-                    Size = new Size(720, 220),
-                    Font = new Font("Segoe UI", 11.5F),
-                    ForeColor = Color.FromArgb(45, 55, 50)
-                };
-                contentArea.Controls.Add(infoBox);
+                    Location = new Point(35, 85),
+                    Size = new Size(820, 190),
+                    Font = new Font("Segoe UI", 11F),
+                    ForeColor = Color.FromArgb(40, 50, 45)
+                });
 
-                var btnBackHome = HaaIsTheme.CreateButton("← Нүүр хуудас руу буцах", "btnBackHome", 50, 310, primary: true);
-                btnBackHome.Size = new Size(240, 42);
-                btnBackHome.Click += (s, e) => SwitchTab("Нүүр");
-                contentArea.Controls.Add(btnBackHome);
+                var btnBack = HaaIsTheme.CreateButton("← Нүүр хуудас руу буцах", "btnBack", 35, 290, primary: true);
+                btnBack.Size = new Size(230, 42);
+                btnBack.Click += (s, e) => SwitchTab("НҮҮР");
+                infoCard.Controls.Add(btnBack);
+
+                contentArea.Controls.Add(infoCard);
             }
+
+            contentArea.ResumeLayout();
         }
     }
 }

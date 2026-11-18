@@ -13,14 +13,14 @@ namespace WinFormsApp1
 
         public TeacherLoginForm()
         {
-            Text = "ХААИС - Багш / Админ Нэвтрэх";
+            Text = "Коосэн - Нэвтрэх";
             HaaIsTheme.StyleForm(this);
             ClientSize = new Size(450, 400);
 
             var header = new Panel { Dock = DockStyle.Top, Height = 90, BackColor = HaaIsTheme.Green };
             header.Controls.Add(new Label
             {
-                Text = "Багш / Админ Нэвтрэх",
+                Text = "Нэвтрэх",
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter,
                 ForeColor = HaaIsTheme.White,
@@ -28,7 +28,7 @@ namespace WinFormsApp1
             });
             Controls.Add(header);
 
-            Controls.Add(HaaIsTheme.CreateLabel("Багшийн ID эсвэл Админ нэр", 50, 115));
+            Controls.Add(HaaIsTheme.CreateLabel("ID эсвэл Нэр", 50, 115));
             HaaIsTheme.StyleTextBox(txtTeacherID, 50, 145, 330);
             Controls.Add(txtTeacherID);
 
@@ -54,17 +54,15 @@ namespace WinFormsApp1
                 return;
             }
 
-            // 1. Админ эрх шалгах
             if (user == "admin" && pass == "123")
             {
-                MessageBox.Show("Админ эрхээр амжилттай нэвтэрлээ!", "ХААИС", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show("Админ эрхээр амжилттай нэвтэрлээ!", "Коосэн", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 Hide();
                 new ManagerPanelForm().ShowDialog();
                 Close();
                 return;
             }
 
-            // 2. Өгөгдлийн сангаас багшийн бүртгэл шалгах
             try
             {
                 using var conn = new MySqlConnection(ConnectionString);
@@ -77,14 +75,14 @@ namespace WinFormsApp1
                 var result = cmd.ExecuteScalar();
                 if (result != null)
                 {
-                    MessageBox.Show($"Тавтай морилно уу, {result} багш аа!", "ХААИС", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show($"Тавтай морилно уу, {result} багш аа!", "Коосэн", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     Hide();
                     new TeacherDashboardForm().ShowDialog();
                     Close();
                 }
                 else
                 {
-                    MessageBox.Show("Багшийн ID эсвэл нууц үг буруу байна.", "Алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("ID эсвэл нууц үг буруу байна.", "Алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
