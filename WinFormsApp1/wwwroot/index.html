@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дархан Коосэн | LMS</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ================= VIEW 1: ҮНДСЭН ВЭБСАЙТ ================= -->
+    <div id="view-home" class="view active">
+        <div class="top-bar">
+            <div>📞 7037-3737   |   info@kosen.edu.mn   |   Дархан-Уул аймаг</div>
+            <div class="top-bar-right">
+                <span class="lang-switch-pub" onclick="toggleLanguage()" id="pub-lang"><u style="color:#ffd700;">MN</u> | EN</span>
+            </div>
+        </div>
+
+        <div class="pub-header" style="justify-content:space-between; max-width:1200px; width:100%; margin:0 auto;">
+            <div style="display:flex; align-items:center; gap:16px; cursor:pointer;" onclick="showView('view-home')">
+                <div class="logo-circle">ХААИС<br>КООСЭН</div>
+                <div>
+                    <small class="pub-sub" data-i18n="pub_sub">ХӨДӨӨ АЖ АХУЙН ИХ СУРГУУЛИЙН ДАРХАН-УУЛ АЙМАГ ДАХЬ</small>
+                    <h1 class="pub-title" data-i18n="pub_title">ДАРХАН КООСЭН ТЕХНОЛОГИЙН КОЛЛЕЖ</h1>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <button class="btn-elselt" onclick="openAdmissions()" data-i18n="btn_elselt">ЭЛСЭЛТИЙН БҮРТГЭЛ ▸</button>
+                <button class="btn-portal" onclick="showView('view-login')" data-i18n="btn_portal">СИСТЕМД НЭВТРЭХ ▸</button>
+            </div>
+        </div>
+
+        <!-- ДЭЭД НОГООН ЦЭС (DROPDOWN MENU) -->
+        <div class="pub-nav">
+            <div class="pub-nav-item active" onclick="showView('view-home')" data-i18n="nav_p_home">🏠 НҮҮР</div>
+
+            <div class="pub-dropdown">
+                <div class="pub-nav-item" data-i18n="nav_p_about">БИДНИЙ ТУХАЙ ▾</div>
+                <div class="pub-dropdown-menu">
+                    <div onclick="openPubInfo('about')">Сургуулийн танилцуулга</div>
+                    <div onclick="openPubInfo('vision')">Алсын хараа, Эрхэм зорилго</div>
+                    <div onclick="openPubInfo('history')">Түүхэн замнал</div>
+                </div>
+            </div>
+
+            <div class="pub-dropdown">
+                <div class="pub-nav-item" data-i18n="nav_p_prog">ХӨТӨЛБӨР ▾</div>
+                <div class="pub-dropdown-menu">
+                    <div onclick="openPubInfo('it')">Мэдээллийн технологи</div>
+                    <div onclick="openPubInfo('elec')">Цахилгаан инженерчлэл</div>
+                    <div onclick="openPubInfo('mech')">Механик инженерчлэл</div>
+                    <div onclick="openPubInfo('civil')">Барилгын инженерчлэл</div>
+                </div>
+            </div>
+
+            <div class="pub-dropdown">
+                <div class="pub-nav-item" data-i18n="nav_p_edu">СУРГАЛТЫН ҮЙЛ АЖИЛЛАГАА ▾</div>
+                <div class="pub-dropdown-menu">
+                    <div onclick="openPubInfo('schedule')">Сургалтын нэгдсэн хуваарь</div>
+                    <div onclick="openPubInfo('scholarship')">Тэтгэлэг ба хөнгөлөлт</div>
+                    <div onclick="openPubInfo('dorm')">Оюутны дотуур байр</div>
+                </div>
+            </div>
+
+            <div class="pub-dropdown">
+                <div class="pub-nav-item" data-i18n="nav_p_intl">ГАДААД ХАРИЛЦАА ▾</div>
+                <div class="pub-dropdown-menu">
+                    <div onclick="openPubInfo('japan')">Япон улсын Коосэн хамтын ажиллагаа</div>
+                    <div onclick="openPubInfo('exchange')">Оюутан солилцооны хөтөлбөр</div>
+                </div>
+            </div>
+
+            <div class="pub-nav-item" onclick="openPubInfo('contact')" data-i18n="nav_p_contact">ХОЛБОО БАРИХ</div>
+        </div>
+
+        <div id="public-home-content"></div>
+
+        <!-- МЭДЭЭЛЛИЙН ЦОНХ -->
+        <div class="modal-overlay" id="pub-info-modal" onclick="if(event.target===this) closePubInfo()">
+            <div class="modal-box" style="max-width:560px; width:92%;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:12px; margin-bottom:14px;">
+                    <h3 id="pub-info-title" style="color:var(--green-dark); margin:0;">Мэдээлэл</h3>
+                    <button onclick="closePubInfo()" style="background:none; border:none; font-size:18px; cursor:pointer;">✕</button>
+                </div>
+                <div id="pub-info-body" style="font-size:14px; line-height:1.65; color:#334155;"></div>
+                <div class="modal-footer">
+                    <button class="btn-primary" onclick="closePubInfo()">Хаах</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ХАМГИЙН ДООД ХЭСЭГ (FOOTER) -->
+        <footer class="pub-footer">
+            <div class="footer-grid">
+                <div>
+                    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+                        <div class="logo-circle" style="width:46px; height:46px; font-size:8px; border-color:var(--lime); color:white;">ХААИС<br>КООСЭН</div>
+                        <div style="font-weight:700; font-size:15px;" data-i18n="pub_title">ДАРХАН КООСЭН ТЕХНОЛОГИЙН КОЛЛЕЖ</div>
+                    </div>
+                    <p style="font-size:13px; color:#cbd5e1; line-height:1.6;" data-i18n="kosen_slogan">
+                        15 НАСТАЙГААС 20 НАС ХҮРТЭЛ 5 ЖИЛИЙН ЦОГЦ ХӨТӨЛБӨРӨӨР ИНЖЕНЕР БЭЛТГЭДЭГ ЯПОН ЗАГВАРЫН СУРГУУЛЬ
+                    </p>
+                </div>
+                <div>
+                    <h4 data-i18n="footer_contact">ХОЛБОО БАРИХ</h4>
+                    <p>📍 Дархан-Уул аймаг, Дархан сум, ХААИС-ийн байр</p>
+                    <p>📞 Утас: 7037-3737, 9911-2233</p>
+                    <p>✉️ Имэйл: info@kosen.edu.mn</p>
+                    <p>🕒 Даваа–Баасан: 08:30 – 17:30</p>
+                </div>
+                <div>
+                    <h4 data-i18n="footer_links">ЧУХАЛ ХОЛБООСУУД</h4>
+                    <div class="footer-link" onclick="openAdmissions()">▸ Элсэлтийн цахим бүртгэл</div>
+                    <div class="footer-link" onclick="showView('view-login')">▸ Оюутны LMS систем</div>
+                    <div class="footer-link" onclick="showView('view-login')">▸ Багш, ажилтны портал</div>
+                    <div class="footer-link" onclick="openPubInfo('scholarship')">▸ Тэтгэлэгт хөтөлбөрүүд</div>
+                </div>
+            </div>
+            <div class="footer-bottom" data-i18n="footer_copy">
+                © 2026 ХААИС-ийн харьяа Дархан Коосэн Технологийн Коллеж. Бүх эрх хуулиар хамгаалагдсан.
+            </div>
+        </footer>
+    </div>
+
+    <!-- ================= VIEW 1.5: ЭЛСЭЛТИЙН СИСТЕМ ================= -->
+    <div id="view-admissions" class="view">
+        <div class="top-bar">
+            <div>🎓 ДАРХАН КООСЭН — ЭЛСЭЛТИЙН ЦАХИМ СИСТЕМ (elselt.kosen)</div>
+            <button class="btn-portal" onclick="showView('view-home')">← Нүүр хуудас руу буцах</button>
+        </div>
+        <div class="lms-container" style="max-width:1040px;">
+            <h1 class="page-heading">2026 оны Элсэлтийн бүртгэл</h1>
+            <div id="admissions-body"></div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 1.6: МЭДЭЭНИЙ ДЭЛГЭРЭНГҮЙ (МУИС ЗАГВАР) ================= -->
+    <div id="view-article" class="view">
+        <div class="top-bar">
+            <div>📰 ДАРХАН КООСЭН — МЭДЭЭ, МЭДЭЭЛЭЛ (news.kosen)</div>
+            <button class="btn-portal" onclick="showView('view-home')">← Нүүр хуудас руу буцах</button>
+        </div>
+        <div class="lms-container" style="max-width:1160px; padding-top:26px;">
+            <div id="article-detail-body"></div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 2: LMS SPLIT-SCREEN LOGIN ================= -->
+    <div id="view-login" class="view">
+        <div class="login-split">
+            <div class="login-left">
+                <div class="badge">СУРГАЛТЫН ДИЖИТАЛ ОРЧИН</div>
+                <h1>ХӨДӨӨ АЖ АХУЙН ИХ СУРГУУЛИЙН<br><span>ДАРХАН-УУЛ</span> АЙМАГ ДАХЬ<br>САЛБАР СУРГУУЛЬ • КООСЭН</h1>
+                <div class="pills">
+                    <div class="pill">📖 ХИЧЭЭЛ</div>
+                    <div class="pill">☑ ДААЛГАВАР</div>
+                    <div class="pill">📈 ДҮН</div>
+                </div>
+            </div>
+            <div class="login-right">
+                <div class="login-card">
+                    <div class="logo-circle login-logo">ХААИС<br>КООСЭН</div>
+                    <p class="login-subtitle" data-i18n="login_sub">Сургалтын удирдлагын системд нэвтрэх ↴</p>
+
+                    <div class="role-tabs">
+                        <button class="role-btn active" onclick="setRole('student', this)" data-i18n="role_student">Оюутан</button>
+                        <button class="role-btn" onclick="setRole('teacher', this)" data-i18n="role_teacher">Багш</button>
+                        <button class="role-btn" onclick="setRole('admin', this)" data-i18n="role_admin">Админ</button>
+                    </div>
+
+                    <div id="login-error" class="error-msg"></div>
+
+                    <div class="input-group">
+                        <label id="lbl-id">Оюутны код:</label>
+                        <input type="text" id="txt-id" placeholder="Кодоо оруулна уу...">
+                    </div>
+                    <div class="input-group">
+                        <label data-i18n="password">Нууц үг:</label>
+                        <input type="password" id="txt-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') sendLogin()">
+                    </div>
+
+                    <button class="btn-primary full-width" onclick="sendLogin()" data-i18n="login_submit">Системд нэвтрэх</button>
+                    <button class="btn-link-muted" onclick="showView('view-home')" data-i18n="back_home">← Нүүр хуудас руу буцах</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= VIEW 3: LMS СИСТЕМ (MODERN SIDEBAR SHELL) ================= -->
+    <div id="view-lms" class="view">
+        <div class="lms-app-shell">
+            <!-- ЗҮҮН ТАЛЫН ЭВХЭГДДЭГ ЦЭС (SIDEBAR) -->
+            <aside class="lms-sidebar" id="lms-sidebar">
+                <div class="sidebar-brand" onclick="switchLmsTab('home')">
+                    <div class="logo-circle nav-logo">ХААИС<br>КООСЭН</div>
+                    <div class="brand-text">
+                        <div class="brand-title">ДАРХАН КООСЭН</div>
+                        <div class="brand-sub">Digital Campus</div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section-label">ҮНДСЭН ЦЭС</div>
+                <nav class="lms-nav-links" id="lms-nav-links">
+                    <div class="lms-link" id="nav-home" onclick="switchLmsTab('home')" data-i18n="nav_home">🏠 Нүүр</div>
+                    <div class="lms-link active" id="nav-dashboard" onclick="switchLmsTab('dashboard')" data-i18n="nav_dashboard">📊 Хянах самбар</div>
+                    <div class="lms-link" id="nav-courses" onclick="switchLmsTab('courses')" data-i18n="nav_courses">📚 Миний хичээлүүд</div>
+                </nav>
+
+            </aside>
+
+            <!-- БАРУУН ТАЛЫН АЖЛЫН ТАЛБАР (WORKSPACE) -->
+            <div class="lms-workspace">
+                <header class="lms-topbar">
+                    <div class="topbar-left">
+                        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Цэс эвхэх / нээх">☰</button>
+                        <div class="topbar-badge">🎓 ХААИС • Дархан Коосэн Портал</div>
+                    </div>
+
+                    <div class="lms-nav-right">
+                        <button class="lang-pill" id="lms-lang-btn" onclick="toggleLanguage()">🌐 MN</button>
+                        <div class="edit-toggle">
+                            <span data-i18n="edit_mode">Edit mode</span>
+                            <div class="switch" id="edit-switch" onclick="toggleEditMode()"></div>
+                        </div>
+                        <button class="icon-btn" onclick="toggleNotif()" title="Notifications">
+                            🔔<span class="notif-badge" id="notif-count" style="display:none;">0</span>
+                        </button>
+                        <button class="icon-btn" onclick="toggleChatDrawer()" title="Messages">💬</button>
+
+                        <div class="user-trigger" onclick="toggleDropdown()">
+                            <div class="avatar" id="nav-initials">НН</div>
+                            <span id="nav-username" class="nav-username">Оюутан</span>
+                            <span class="caret">⌄</span>
+                        </div>
+
+                        <!-- Notifications Popup -->
+                        <div class="notif-popup" id="notif-popup">
+                            <div class="notif-header">
+                                <span data-i18n="notifications">Notifications</span>
+                                <div class="notif-actions">
+                                    <button onclick="markAllNotifsRead()" title="Mark all as read">✓</button>
+                                    <button onclick="closeMenus()" title="Close">✕</button>
+                                </div>
+                            </div>
+                            <div class="notif-list" id="notif-list"></div>
+                            <div class="notif-footer" onclick="closeMenus()" data-i18n="see_all">See all</div>
+                        </div>
+
+                        <!-- User Profile Dropdown -->
+                        <div class="user-dropdown" id="user-dropdown"></div>
+                    </div>
+                </header>
+
+                <!-- Dynamic LMS Content -->
+                <main id="lms-main-wrapper"></main>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= RIGHT SLIDING CHAT DRAWER ================= -->
+    <div class="drawer-backdrop" id="chat-backdrop" onclick="toggleChatDrawer(false)"></div>
+    <aside class="chat-drawer" id="chat-drawer">
+        <div class="chat-drawer-header">
+            <input type="text" id="chat-search" placeholder="Search..." oninput="renderChatDrawer()">
+            <button class="chat-close-btn" onclick="toggleChatDrawer(false)">✕</button>
+        </div>
+        <div style="padding:10px 14px; border-bottom:1px solid var(--border); background:var(--bg);">
+            <button class="btn-primary" style="width:100%; padding:8px; font-size:13px;"
+                    onclick="toggleChatDrawer(false); openGroupChatPage();">
+                👥 Групп чат нээх / Үүсгэх
+            </button>
+        </div>
+        <div class="chat-drawer-body" id="chat-drawer-body"></div>
+    </aside>
+
+    <!-- ================= MODALS ================= -->
+    <!-- 1. New Calendar Event Modal -->
+    <div class="modal-overlay" id="event-modal">
+        <div class="modal-box">
+            <h3 class="modal-title" data-i18n="new_event">New event</h3>
+            <div class="input-group">
+                <label data-i18n="ev_title">Event title:</label>
+                <input type="text" id="ev-title" placeholder="Жнь: Модуль 1 явц">
+            </div>
+            <div class="input-group">
+                <label data-i18n="ev_course">Course:</label>
+                <select id="ev-course"></select>
+            </div>
+            <div class="input-row">
+                <div class="input-group">
+                    <label data-i18n="ev_date">Date:</label>
+                    <input type="date" id="ev-date">
+                </div>
+                <div class="input-group">
+                    <label data-i18n="ev_time">Time:</label>
+                    <input type="time" id="ev-time" value="09:00">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="m-select" onclick="closeEventModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn-primary" onclick="saveCalendarEvent()" data-i18n="save">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Calendar Event Detail Modal ("Go to activity") -->
+    <div class="modal-overlay" id="event-detail-modal">
+        <div class="event-detail-box">
+            <div class="event-detail-header">
+                <span id="ed-title">Event Title</span>
+                <button onclick="closeEventDetailModal()">✕</button>
+            </div>
+            <div class="event-detail-body">
+                <div class="ed-row"><span>🕒</span> <span id="ed-datetime"></span></div>
+                <div class="ed-row"><span>📅</span> <span id="ed-type">Course event</span></div>
+                <div class="ed-row"><span>🎓</span> <span id="ed-course" class="ed-course-link"></span></div>
+            </div>
+            <div class="event-detail-footer">
+                <button class="btn-go-activity" id="ed-go-btn" data-i18n="go_to_activity">Go to activity</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- Modular Scripts -->
+    <script src="js/i18n.js"></script>
+    <script src="js/public.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/student.js"></script>
+    <script src="js/course.js"></script>
+    <script src="js/calendar.js"></script>
+    <script src="js/chat_notif.js"></script>
+    <script src="js/teacher.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -10,14 +10,10 @@ namespace WinFormsApp1
     {
         private readonly Panel leftPanel = new();
         private readonly Panel rightPanel = new();
-        private readonly Panel loginBox = new(); // Баруун талын голд байрлах багц
+        private readonly Panel loginBox = new();
 
         private readonly TextBox txtUserID = new();
         private readonly TextBox txtPassword = new();
-        private readonly Label lblUserPrompt = new();
-        private Button btnRoleStudent = null!;
-        private Button btnRoleTeacher = null!;
-        private bool isStudentMode = true;
 
         private static readonly Color LmsGreen = Color.FromArgb(14, 77, 45);
         private static readonly Color LimeAccent = Color.FromArgb(168, 224, 52);
@@ -30,9 +26,7 @@ namespace WinFormsApp1
             ClientSize = new Size(1020, 620);
             MinimumSize = new Size(900, 560);
 
-            // =================================================================
-            // 1. ЗҮҮН ТАЛЫН НОГООН САМБАР (Дэлгэцийн яг 50%-ийг эзэлнэ)
-            // =================================================================
+            // 1. ЗҮҮН ТАЛЫН НОГООН САМБАР (50%)
             leftPanel.Dock = DockStyle.Left;
             leftPanel.Width = ClientSize.Width / 2;
             leftPanel.BackColor = LmsGreen;
@@ -44,8 +38,6 @@ namespace WinFormsApp1
 
                 int w = leftPanel.Width;
                 int h = leftPanel.Height;
-
-                // Дэлгэц томроход текстийг босоо болон хэвтээ тэнхлэгт автоматаар голлуулах
                 int baseX = Math.Max(40, (w - 430) / 2);
                 int baseY = Math.Max(120, (h - 260) / 2);
 
@@ -84,13 +76,11 @@ namespace WinFormsApp1
                 DrawFeaturePill(g, baseX + 230, baseY + 200, 80, "📈 ДҮН");
             };
 
-            // =================================================================
-            // 2. БАРУУН ТАЛЫН ЦАГААН САМБАР (Доторх loginBox нь яг голд байрлана)
-            // =================================================================
+            // 2. БАРУУН ТАЛЫН ЦАГААН САМБАР (50%)
             rightPanel.Dock = DockStyle.Fill;
             rightPanel.BackColor = Color.White;
 
-            loginBox.Size = new Size(420, 500);
+            loginBox.Size = new Size(420, 520);
             loginBox.BackColor = Color.White;
 
             var logoPanel = new Panel
@@ -115,31 +105,35 @@ namespace WinFormsApp1
             loginBox.Controls.Add(new Label
             {
                 Text = "Сургалтын удирдлагын системд нэвтрэх ↴",
-                Location = new Point(50, 125),
+                Location = new Point(50, 122),
                 AutoSize = true,
                 ForeColor = Color.FromArgb(80, 90, 85),
                 Font = new Font("Segoe UI", 9.5F)
             });
 
-            btnRoleStudent = HaaIsTheme.CreateButton("Оюутан", "btnRoleStudent", 50, 155, primary: true);
-            btnRoleStudent.Size = new Size(155, 38);
-            btnRoleStudent.Click += (s, e) => SwitchRole(true);
-            loginBox.Controls.Add(btnRoleStudent);
+            // Оюутан (идэвхтэй) ба Багшийн тусдаа цонх руу үсрэх товч
+            var btnStudentTab = HaaIsTheme.CreateButton("Оюутан", "btnStudentTab", 50, 152, primary: true);
+            btnStudentTab.Size = new Size(155, 38);
+            loginBox.Controls.Add(btnStudentTab);
 
-            btnRoleTeacher = HaaIsTheme.CreateButton("Багш / Админ", "btnRoleTeacher", 215, 155, primary: false);
-            btnRoleTeacher.Size = new Size(155, 38);
-            btnRoleTeacher.Click += (s, e) => SwitchRole(false);
-            loginBox.Controls.Add(btnRoleTeacher);
+            var btnTeacherPortal = HaaIsTheme.CreateButton("Багш нэвтрэх ➔", "btnTeacherPortal", 215, 152, primary: false);
+            btnTeacherPortal.Size = new Size(155, 38);
+            btnTeacherPortal.Click += (s, e) =>
+            {
+                using var tLogin = new TeacherLoginForm();
+                Hide();
+                tLogin.ShowDialog();
+                Show();
+            };
+            loginBox.Controls.Add(btnTeacherPortal);
 
-            lblUserPrompt = HaaIsTheme.CreateLabel("Оюутны код (OpenID):", 50, 210);
-            loginBox.Controls.Add(lblUserPrompt);
-
-            HaaIsTheme.StyleTextBox(txtUserID, 50, 235, 320);
+            loginBox.Controls.Add(HaaIsTheme.CreateLabel("Оюутны код (OpenID):", 50, 208));
+            HaaIsTheme.StyleTextBox(txtUserID, 50, 233, 320);
             loginBox.Controls.Add(txtUserID);
 
-            loginBox.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 50, 280));
+            loginBox.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 50, 278));
             txtPassword.PasswordChar = '●';
-            HaaIsTheme.StyleTextBox(txtPassword, 50, 305, 320);
+            HaaIsTheme.StyleTextBox(txtPassword, 50, 303, 320);
             loginBox.Controls.Add(txtPassword);
 
             var btnLogin = HaaIsTheme.CreateButton("Системд нэвтрэх", "btnLogin", 50, 355, primary: true);
@@ -157,29 +151,30 @@ namespace WinFormsApp1
                 Font = new Font("Segoe UI", 8.2F)
             });
 
-            loginBox.Controls.Add(new Label
+            // Админы тусгай нэвтрэх цонх (ManagerLoginForm) руу үсрэх холбоос
+            var btnAdminPortal = new Button
             {
-                Text = "Монгол ⌄",
-                Location = new Point(160, 445),
-                Size = new Size(100, 20),
-                TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = LmsGreen,
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold)
-            });
-
-            loginBox.Controls.Add(new Label
+                Text = "⚙ Систем удирдлага (Админ нэвтрэх)",
+                Location = new Point(85, 452),
+                Size = new Size(250, 32),
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.White,
+                ForeColor = Color.FromArgb(120, 40, 40),
+                Font = new Font("Segoe UI", 8.8F, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnAdminPortal.FlatAppearance.BorderSize = 0;
+            btnAdminPortal.Click += (s, e) =>
             {
-                Text = "Күүки санах ойн мэдэгдэл",
-                Location = new Point(110, 475),
-                Size = new Size(200, 20),
-                TextAlign = ContentAlignment.MiddleCenter,
-                ForeColor = Color.Gray,
-                Font = new Font("Segoe UI", 8.2F)
-            });
+                using var adminLogin = new ManagerLoginForm();
+                Hide();
+                adminLogin.ShowDialog();
+                Show();
+            };
+            loginBox.Controls.Add(btnAdminPortal);
 
             rightPanel.Controls.Add(loginBox);
 
-            // Цонх томрох/жижгэрэх бүрд 50%/50% хувааж, loginBox-ийг баруун талын яг голд байрлуулах
             Resize += (s, e) => AdjustResponsiveLayout();
             Load += (s, e) => AdjustResponsiveLayout();
 
@@ -208,28 +203,6 @@ namespace WinFormsApp1
                 pillRect, Color.White, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
-        private void SwitchRole(bool studentMode)
-        {
-            isStudentMode = studentMode;
-            lblUserPrompt.Text = studentMode ? "Оюутны код (OpenID):" : "Багшийн ID эсвэл Админ нэр:";
-            txtUserID.Clear();
-            txtPassword.Clear();
-
-            loginBox.Controls.Remove(btnRoleStudent);
-            loginBox.Controls.Remove(btnRoleTeacher);
-
-            btnRoleStudent = HaaIsTheme.CreateButton("Оюутан", "btnRoleStudent", 50, 155, primary: studentMode);
-            btnRoleStudent.Size = new Size(155, 38);
-            btnRoleStudent.Click += (s, e) => SwitchRole(true);
-
-            btnRoleTeacher = HaaIsTheme.CreateButton("Багш / Админ", "btnRoleTeacher", 215, 155, primary: !studentMode);
-            btnRoleTeacher.Size = new Size(155, 38);
-            btnRoleTeacher.Click += (s, e) => SwitchRole(false);
-
-            loginBox.Controls.Add(btnRoleStudent);
-            loginBox.Controls.Add(btnRoleTeacher);
-        }
-
         private void BtnLogin_Click(object? sender, EventArgs e)
         {
             string userId = txtUserID.Text.Trim();
@@ -237,79 +210,40 @@ namespace WinFormsApp1
 
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(password))
             {
-                MessageBox.Show("Код болон нууц үгээ оруулна уу.", "Мэдээлэл дутуу", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Оюутны код болон нууц үгээ оруулна уу.", "Мэдээлэл дутуу", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (isStudentMode)
+            try
             {
-                try
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+                string query = "SELECT first_name, last_name, email, major FROM students WHERE student_id = @id AND password = @pwd";
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", userId);
+                cmd.Parameters.AddWithValue("@pwd", password);
+
+                using var reader = cmd.ExecuteReader();
+                if (reader.Read())
                 {
-                    using var conn = new MySqlConnection(ConnectionString);
-                    conn.Open();
-                    string query = "SELECT first_name, last_name, email, major FROM students WHERE student_id = @id AND password = @pwd";
-                    using var cmd = new MySqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@id", userId);
-                    cmd.Parameters.AddWithValue("@pwd", password);
+                    string firstName = reader.GetString("first_name");
+                    string lastName = reader.GetString("last_name");
+                    string email = reader.GetString("email");
+                    string major = reader.GetString("major");
 
-                    using var reader = cmd.ExecuteReader();
-                    if (reader.Read())
-                    {
-                        string firstName = reader.GetString("first_name");
-                        string lastName = reader.GetString("last_name");
-                        string email = reader.GetString("email");
-                        string major = reader.GetString("major");
-
-                        Hide();
-                        using var profileForm = new StudentProfileForm(lastName, firstName, userId, email, major);
-                        profileForm.ShowDialog(this);
-                        Close();
-                    }
-                    else
-                    {
-                        MessageBox.Show("Оюутны код эсвэл нууц үг буруу байна.", "LMS Нэвтрэх алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
+                    Hide();
+                    using var profileForm = new StudentProfileForm(lastName, firstName, userId, email, major);
+                    profileForm.ShowDialog(this);
+                    Close();
                 }
-                catch (Exception ex)
+                else
                 {
-                    MessageBox.Show("Өгөгдлийн сантай холбогдоход алдаа гарлаа: " + ex.Message);
+                    MessageBox.Show("Оюутны код эсвэл нууц үг буруу байна.", "LMS Нэвтрэх алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                if (userId == "admin" && password == "123")
-                {
-                    Hide();
-                    new ManagerPanelForm().ShowDialog();
-                    Close();
-                    return;
-                }
-
-                try
-                {
-                    using var conn = new MySqlConnection(ConnectionString);
-                    conn.Open();
-                    string query = "SELECT full_name FROM teachers WHERE teacher_id = @id AND password = @pwd";
-                    using var cmd = new MySqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@id", userId);
-                    cmd.Parameters.AddWithValue("@pwd", password);
-
-                    var result = cmd.ExecuteScalar();
-                    if (result != null)
-                    {
-                        Hide();
-                        new TeacherDashboardForm().ShowDialog();
-                        Close();
-                    }
-                    else
-                    {
-                        MessageBox.Show("Багшийн ID эсвэл нууц үг буруу байна.", "LMS Нэвтрэх алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Өгөгдлийн сантай холбогдоход алдаа гарлаа: " + ex.Message);
-                }
+                MessageBox.Show("Өгөгдлийн сантай холбогдоход алдаа гарлаа: " + ex.Message, "Алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
     }

@@ -10,14 +10,6 @@ namespace WinFormsApp1
         private readonly DataGridView gridStudents = new();
         private readonly DataGridView gridTeachers = new();
 
-        // Оюутан нэмэх талбарууд
-        private readonly TextBox txtStuLastName = new();
-        private readonly TextBox txtStuFirstName = new();
-        private readonly TextBox txtStuId = new();
-        private readonly TextBox txtStuEmail = new();
-        private readonly ComboBox cmbStuMajor = new();
-        private readonly TextBox txtStuPass = new();
-
         // Багш нэмэх талбарууд
         private readonly TextBox txtTeacherId = new();
         private readonly TextBox txtTeacherName = new();
@@ -30,7 +22,7 @@ namespace WinFormsApp1
         {
             Text = "Коосэн - Систем Удирдлагын Самбар (Manager Panel)";
             HaaIsTheme.StyleForm(this);
-            ClientSize = new Size(920, 640);
+            ClientSize = new Size(940, 640);
             MinimumSize = new Size(860, 580);
 
             var header = new Panel
@@ -57,54 +49,27 @@ namespace WinFormsApp1
             };
 
             // =================================================================
-            // ТАБ 1: ОЮУТНЫ ХАЯГ ҮҮСГЭХ & УДИРДАХ
+            // ТАБ 1: ОЮУТНЫ БҮРТГЭЛ УДИРДАХ (RegisterForm дуудаж нэмнэ)
             // =================================================================
-            var tabStudents = new TabPage("Оюутны бүртгэл үүсгэх") { BackColor = HaaIsTheme.White };
+            var tabStudents = new TabPage("Оюутны бүртгэл") { BackColor = HaaIsTheme.White };
 
-            tabStudents.Controls.Add(HaaIsTheme.CreateLabel("Овог:", 15, 12));
-            HaaIsTheme.StyleTextBox(txtStuLastName, 15, 35, 170);
-            tabStudents.Controls.Add(txtStuLastName);
-
-            tabStudents.Controls.Add(HaaIsTheme.CreateLabel("Нэр:", 200, 12));
-            HaaIsTheme.StyleTextBox(txtStuFirstName, 200, 35, 170);
-            tabStudents.Controls.Add(txtStuFirstName);
-
-            tabStudents.Controls.Add(HaaIsTheme.CreateLabel("Оюутны код:", 385, 12));
-            HaaIsTheme.StyleTextBox(txtStuId, 385, 35, 170);
-            tabStudents.Controls.Add(txtStuId);
-
-            tabStudents.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 570, 12));
-            HaaIsTheme.StyleTextBox(txtStuPass, 570, 35, 170);
-            tabStudents.Controls.Add(txtStuPass);
-
-            tabStudents.Controls.Add(HaaIsTheme.CreateLabel("Имэйл:", 15, 72));
-            HaaIsTheme.StyleTextBox(txtStuEmail, 15, 95, 240);
-            tabStudents.Controls.Add(txtStuEmail);
-
-            tabStudents.Controls.Add(HaaIsTheme.CreateLabel("Мэргэжил / Анги:", 270, 72));
-            cmbStuMajor.Location = new Point(270, 95);
-            cmbStuMajor.Width = 285;
-            cmbStuMajor.Font = new Font("Segoe UI", 10.5F);
-            cmbStuMajor.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbStuMajor.Items.AddRange(new object[]
+            var btnOpenRegister = HaaIsTheme.CreateButton("+ Шинэ оюутан бүртгэх", "btnOpenRegister", 15, 15, primary: true);
+            btnOpenRegister.Size = new Size(250, 42);
+            btnOpenRegister.Click += (s, e) =>
             {
-                "Мэдээллийн технологи",
-                "Програм хангамж",
-                "Цахилгаан, электроник",
-                "Механик инженерчлэл",
-                "Барилгын инженерчлэл",
-                "Био-инженерчлэл"
-            });
-            cmbStuMajor.SelectedIndex = 0;
-            tabStudents.Controls.Add(cmbStuMajor);
+                using var regForm = new RegisterForm();
+                regForm.ShowDialog(this);
+                LoadStudentData(); // Бүртгэж дуусаад хүснэгтийг шууд шинэчилнэ
+            };
+            tabStudents.Controls.Add(btnOpenRegister);
 
-            var btnAddStudent = HaaIsTheme.CreateButton("+ Оюутны хаяг нэмэх", "btnAddStudent", 570, 90, primary: true);
-            btnAddStudent.Size = new Size(240, 38);
-            btnAddStudent.Click += BtnAddStudent_Click;
-            tabStudents.Controls.Add(btnAddStudent);
+            var btnRefreshStudents = HaaIsTheme.CreateButton("Жагсаалт шинэчлэх", "btnRefreshStudents", 280, 15, primary: false);
+            btnRefreshStudents.Size = new Size(200, 42);
+            btnRefreshStudents.Click += (s, e) => LoadStudentData();
+            tabStudents.Controls.Add(btnRefreshStudents);
 
-            gridStudents.Location = new Point(15, 145);
-            gridStudents.Size = new Size(tabStudents.Width - 30, tabStudents.Height - 210);
+            gridStudents.Location = new Point(15, 70);
+            gridStudents.Size = new Size(tabStudents.Width - 30, tabStudents.Height - 135);
             gridStudents.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             gridStudents.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
             gridStudents.ReadOnly = true;
@@ -137,23 +102,23 @@ namespace WinFormsApp1
             var tabTeachers = new TabPage("Багшийн бүртгэл үүсгэх") { BackColor = HaaIsTheme.White };
 
             tabTeachers.Controls.Add(HaaIsTheme.CreateLabel("Багшийн ID:", 15, 15));
-            HaaIsTheme.StyleTextBox(txtTeacherId, 15, 40, 160);
+            HaaIsTheme.StyleTextBox(txtTeacherId, 15, 40, 165);
             tabTeachers.Controls.Add(txtTeacherId);
 
-            tabTeachers.Controls.Add(HaaIsTheme.CreateLabel("Овог, Нэр:", 190, 15));
-            HaaIsTheme.StyleTextBox(txtTeacherName, 190, 40, 210);
+            tabTeachers.Controls.Add(HaaIsTheme.CreateLabel("Овог, Нэр:", 195, 15));
+            HaaIsTheme.StyleTextBox(txtTeacherName, 195, 40, 215);
             tabTeachers.Controls.Add(txtTeacherName);
 
-            tabTeachers.Controls.Add(HaaIsTheme.CreateLabel("Тэнхим:", 415, 15));
-            HaaIsTheme.StyleTextBox(txtDepartment, 415, 40, 200);
+            tabTeachers.Controls.Add(HaaIsTheme.CreateLabel("Тэнхим:", 425, 15));
+            HaaIsTheme.StyleTextBox(txtDepartment, 425, 40, 200);
             tabTeachers.Controls.Add(txtDepartment);
 
-            tabTeachers.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 630, 15));
-            HaaIsTheme.StyleTextBox(txtTeacherPass, 630, 40, 180);
+            tabTeachers.Controls.Add(HaaIsTheme.CreateLabel("Нууц үг:", 640, 15));
+            HaaIsTheme.StyleTextBox(txtTeacherPass, 640, 40, 185);
             tabTeachers.Controls.Add(txtTeacherPass);
 
             var btnAddTeacher = HaaIsTheme.CreateButton("+ Багшийн хаяг нэмэх", "btnAddTeacher", 15, 85, primary: true);
-            btnAddTeacher.Size = new Size(230, 38);
+            btnAddTeacher.Size = new Size(235, 40);
             btnAddTeacher.Click += BtnAddTeacher_Click;
             tabTeachers.Controls.Add(btnAddTeacher);
 
@@ -194,47 +159,6 @@ namespace WinFormsApp1
             Controls.Add(btnClose);
             Controls.Add(tabControl);
             Controls.Add(header);
-        }
-
-        private void BtnAddStudent_Click(object? sender, EventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(txtStuLastName.Text) ||
-                string.IsNullOrWhiteSpace(txtStuFirstName.Text) ||
-                string.IsNullOrWhiteSpace(txtStuId.Text) ||
-                string.IsNullOrWhiteSpace(txtStuEmail.Text) ||
-                string.IsNullOrWhiteSpace(txtStuPass.Text))
-            {
-                MessageBox.Show("Оюутны бүх мэдээллийг бүрэн бөглөнө үү.", "Мэдээлэл дутуу", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            try
-            {
-                using var conn = new MySqlConnection(ConnectionString);
-                conn.Open();
-                string query = @"INSERT INTO students (last_name, first_name, student_id, email, major, password) 
-                                 VALUES (@last, @first, @id, @email, @major, @pwd)";
-                using var cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@last", txtStuLastName.Text.Trim());
-                cmd.Parameters.AddWithValue("@first", txtStuFirstName.Text.Trim());
-                cmd.Parameters.AddWithValue("@id", txtStuId.Text.Trim());
-                cmd.Parameters.AddWithValue("@email", txtStuEmail.Text.Trim());
-                cmd.Parameters.AddWithValue("@major", cmbStuMajor.SelectedItem?.ToString() ?? "Мэдээллийн технологи");
-                cmd.Parameters.AddWithValue("@pwd", txtStuPass.Text.Trim());
-                cmd.ExecuteNonQuery();
-
-                MessageBox.Show("Оюутны хаяг амжилттай үүслээ!", "Коосэн", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                txtStuLastName.Clear();
-                txtStuFirstName.Clear();
-                txtStuId.Clear();
-                txtStuEmail.Clear();
-                txtStuPass.Clear();
-                LoadStudentData();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Оюутан нэмэхэд алдаа гарлаа (Оюутны код давхардсан байж магадгүй): " + ex.Message, "Алдаа", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
         }
 
         private void BtnAddTeacher_Click(object? sender, EventArgs e)

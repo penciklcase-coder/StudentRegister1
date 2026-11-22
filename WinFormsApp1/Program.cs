@@ -6,7 +6,7 @@ namespace WinFormsApp1
         static void Main()
         {
             ApplicationConfiguration.Initialize();
-            Application.Run(new HomeForm()); // <-- Changed from LoginForm to HomeForm
+            Application.Run(new WebAppForm()); // <-- Changed from LoginForm to HomeForm
         }
     }
 }
