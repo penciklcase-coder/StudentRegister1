@@ -7,13 +7,14 @@ using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using MySql.Data.MySqlClient;
+using WinFormsApp1.DAL;
 
 namespace WinFormsApp1
 {
     public class WebAppForm : Form
     {
         private readonly WebView2 webView = new();
-        private const string ConnectionString = "Server=localhost;Database=haais_db;Uid=root;Pwd=;";
+        private static string ConnectionString => MySqlDbHelper.ConnectionString;
 
         public WebAppForm()
         {
@@ -21,8 +22,27 @@ namespace WinFormsApp1
             ClientSize = new Size(1260, 780);
             StartPosition = FormStartPosition.CenterScreen;
 
+            // Стандарт WinForms MenuStrip (3-Tier WinForms тайлан ба удирдлага руу орох цэс)
+            var menuStrip = new MenuStrip();
+
+            var menuSystem = new ToolStripMenuItem("Систем");
+            menuSystem.DropDownItems.Add("Нүүр хуудас", null, (_, _) => webView.CoreWebView2?.Navigate("https://app.kosen/index.html"));
+            menuSystem.DropDownItems.Add("Дахин ачаалах", null, (_, _) => webView.CoreWebView2?.Reload());
+            menuSystem.DropDownItems.Add(new ToolStripSeparator());
+            menuSystem.DropDownItems.Add("Гарах", null, (_, _) => Close());
+
+            var menuWinForms = new ToolStripMenuItem("WinForms Удирдлага & Тайлан");
+            menuWinForms.DropDownItems.Add("Оюутны бүртгэл (CRUD & Хайлт)", null, (_, _) => new WinFormsReportForm(0).ShowDialog(this));
+            menuWinForms.DropDownItems.Add("Анхааруулга (Төлбөр & Дүн)", null, (_, _) => new WinFormsReportForm(1).ShowDialog(this));
+            menuWinForms.DropDownItems.Add("Статистик График (Chart)", null, (_, _) => new WinFormsReportForm(2).ShowDialog(this));
+
+            menuStrip.Items.Add(menuSystem);
+            menuStrip.Items.Add(menuWinForms);
+
             webView.Dock = DockStyle.Fill;
             Controls.Add(webView);
+            Controls.Add(menuStrip);
+            MainMenuStrip = menuStrip;
 
             Load += WebAppForm_Load;
         }
