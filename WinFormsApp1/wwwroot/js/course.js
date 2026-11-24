@@ -17,9 +17,17 @@ function openCourse(courseName, highlightTitle = null) {
     document.querySelectorAll('.lms-link').forEach(l => l.classList.remove('active'));
     document.getElementById('nav-courses')?.classList.add('active');
 
-    // MySQL-ээс тухайн хичээлийн модулиуд болон оролцогчдыг татах
+    // MySQL-ээс тухайн хичээлийн модулиуд, оролцогчид болон илгээсэн даалгавруудыг татах
     postToCSharp({ action: 'getCourseMaterials', courseName });
     postToCSharp({ action: 'getCourseParticipants', courseName });
+    if (currentUser) {
+        postToCSharp({
+            action: 'getSubmissions',
+            role: currentUser.role,
+            userId: currentUser.id,
+            courseName
+        });
+    }
     renderCourseDetailPage(courseName, highlightTitle);
 }
 
@@ -133,6 +141,84 @@ function renderParticipantsRows() {
         `).join('');
 }
 
+// Семинарын яг доор харагдах PDF даалгавар илгээх хэсэг
+function buildSeminarSubmissionBox(courseName, item) {
+    if (!currentUser || currentUser.role !== 'student') return '';
+    if (item.itemType !== 'seminar') return '';
+
+    const list = typeof submissionsList !== 'undefined' ? submissionsList : [];
+    const mySub = list.find(s => s.materialId === item.id && s.courseName === courseName);
+    const safeCourse = courseName.replace(/'/g, "\\'");
+    const safeTitle = item.itemTitle.replace(/'/g, "\\'");
+
+    return `
+        <div class="seminar-submit-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+                <span style="font-weight:700; font-size:13px; color:var(--text-main);">📤 Семинарын даалгавар илгээх (PDF)</span>
+                ${mySub
+            ? (mySub.score !== null && mySub.score !== undefined
+                ? `<span class="grade-pill" style="background:#dcfce7; color:#15803d;">✅ Үнэлэгдсэн: ${mySub.score} / 100</span>`
+                : `<span class="grade-pill" style="background:#e0f2fe; color:#0369a1;">📨 Илгээсэн (${mySub.submittedAt})</span>`)
+            : `<span class="grade-pill" style="background:#fef3c7; color:#b45309;">⏳ Илгээгээгүй</span>`}
+            </div>
+
+            ${mySub ? `
+                <div class="seminar-sub-status">
+                    <div>
+                        📎 Илгээсэн файл:
+                        <a href="${mySub.fileUrl}" target="_blank" download="${mySub.fileName}" style="color:var(--accent); font-weight:700; text-decoration:none;">
+                            ${mySub.fileName}
+                        </a>
+                    </div>
+                    ${mySub.feedback ? `<div style="margin-top:4px; color:var(--text-main);">💬 <b>Багшийн санал:</b> ${mySub.feedback}</div>` : ''}
+                </div>
+            ` : ''}
+
+            <div class="seminar-upload-row">
+                <input type="file" id="sem-pdf-${item.id}" accept=".pdf,application/pdf" class="seminar-file-input">
+                <input type="text" id="sem-cmt-${item.id}" placeholder="Тайлбар (заавал биш)..." class="seminar-cmt-input">
+                <button class="btn-primary" style="padding:7px 14px; font-size:12.5px; white-space:nowrap;"
+                        onclick="submitSeminarPdf(${item.id}, '${safeCourse}', '${safeTitle}')">
+                    ${mySub ? '🔄 Шинэчлэх' : '📤 PDF илгээх'}
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function submitSeminarPdf(materialId, courseName, itemTitle) {
+    const fileInput = document.getElementById(`sem-pdf-${materialId}`);
+    const commentVal = document.getElementById(`sem-cmt-${materialId}`)?.value.trim() || '';
+
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        return showToast('PDF файлаа сонгоно уу.');
+    }
+
+    const file = fileInput.files[0];
+    if (!file.name.toLowerCase().endsWith('.pdf')) {
+        return showToast('Зөвхөн .pdf өргөтгөлтэй файл илгээнэ үү!');
+    }
+    if (file.size > 25 * 1024 * 1024) {
+        return showToast('Файлын хэмжээ 25MB-аас хэтэрсэн байна.');
+    }
+
+    const finalComment = commentVal ? `${itemTitle} — ${commentVal}` : itemTitle;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        postToCSharp({
+            action: 'submitAssignment',
+            materialId,
+            courseName,
+            studentId: currentUser.id,
+            fileName: file.name,
+            fileBase64: e.target.result,
+            comment: finalComment
+        });
+    };
+    reader.readAsDataURL(file);
+}
+
 function buildCourseTabBody(courseName, grouped, moduleNames, highlightTitle, iconMap) {
     // 1. PARTICIPANTS (Оролцогчид)
     if (activeCourseTab === 'participants') {
@@ -182,7 +268,6 @@ function buildCourseTabBody(courseName, grouped, moduleNames, highlightTitle, ic
             ? courseGradesList.filter(g => g.studentId === currentUser.id)
             : courseGradesList;
 
-        // Хэрэв MySQL-ээс ирээгүй бол оюутны өөрийн studentData.grades-ээс шалгах
         const fallback = (list.length === 0 && currentUser.role === 'student')
             ? studentData.grades.filter(x => x.name === courseName).map(x => ({
                 studentId: currentUser.id,
@@ -251,13 +336,13 @@ function buildCourseTabBody(courseName, grouped, moduleNames, highlightTitle, ic
         `;
     }
 
-    // 5. DEFAULT: COURSE TAB (Модулиуд ба материалууд)
+    // 5. DEFAULT: COURSE TAB (Модулиуд + Семинар бүрийн доор PDF илгээх хэсэг)
     return `
         <div class="module-box">
             <div class="module-box-header">▾ Хичээлийн ерөнхий мэдээлэл, зар</div>
             <div class="module-box-body">
-                <p style="font-size:14px; color:#334155; line-height:1.6;">
-                    <b>Хичээлийн тухай:</b> ${courseName} хичээлийн лекц, семинар, лабораторийн удирдамж болон явцын шалгалтын материалууд энэ хэсэгт байрлана.
+                <p style="font-size:14px; color:var(--muted); line-height:1.6;">
+                    <b>Хичээлийн тухай:</b> ${courseName} хичээлийн лекц, семинар, лабораторийн удирдамж болон даалгавар илгээх хэсгүүд энд байрлана.
                 </p>
             </div>
         </div>
@@ -276,15 +361,18 @@ function buildCourseTabBody(courseName, grouped, moduleNames, highlightTitle, ic
                         ${grouped[mod].map(item => {
                 const isHl = highlightTitle && item.itemTitle.toLowerCase().includes(highlightTitle.toLowerCase());
                 return `
-                            <div class="material-row ${isHl ? 'highlight' : ''}" id="mat-${item.id}">
-                                <div>
-                                    <div style="font-weight:600; font-size:14.5px; color:var(--green-dark);">
-                                        ${iconMap[item.itemType] || '📄'} ${item.itemTitle}
+                            <div class="material-block ${isHl ? 'highlight' : ''}" id="mat-${item.id}">
+                                <div class="material-row" style="border:none; margin:0; padding:0;">
+                                    <div>
+                                        <div style="font-weight:700; font-size:14.5px; color:var(--accent);">
+                                            ${iconMap[item.itemType] || '📄'} ${item.itemTitle}
+                                        </div>
+                                        <div style="font-size:13px; color:var(--muted); margin-top:4px;">${item.description || ''}</div>
                                     </div>
-                                    <div style="font-size:13px; color:#475569; margin-top:4px;">${item.description || ''}</div>
-                                </div>
-                                ${item.fileName ? `<button class="btn-primary" style="padding:7px 14px; font-size:12.5px;" onclick="showToast('Файл нээж байна: ${item.fileName}')">📥 ${item.fileName}</button>` :
+                                    ${item.fileName ? `<button class="m-select" style="padding:7px 14px; font-size:12.5px; cursor:pointer;" onclick="showToast('Файл нээж байна: ${item.fileName}')">📥 ${item.fileName}</button>` :
                         `<button class="m-select" style="cursor:pointer;" onclick="showToast('${item.itemTitle} нээгдлээ')">Нээх</button>`}
+                                </div>
+                                ${buildSeminarSubmissionBox(courseName, item)}
                             </div>`;
             }).join('')}
                     </div>`}

@@ -8,59 +8,16 @@ function renderPublicHome() {
     const container = document.getElementById('public-home-content');
     if (!container) return;
 
-    const progs = publicData.programs;
-    const leftProgs = progs.slice(0, 2);
-    const rightProgs = progs.slice(2, 4);
-
     const featured = publicData.news.find(n => n.category === 'Тэргүүн мэдээ') || publicData.news[0];
     const sideNews = publicData.news.filter(n => n !== featured).slice(0, 4);
-    const regularNews = publicData.news.filter(n => n.category === 'Мэдээ');
-    const announcements = publicData.news.filter(n => n.category === 'Зарлал');
 
-    const majorColors = ['#1e3a8a', '#0f766e', '#b45309', '#4338ca'];
+    // Зарлал & Элсэлтийн мэдээнүүдийг баруун баганад, бусад бүх мэдээг зүүн баганад харуулна
+    const announcements = publicData.news.filter(n => n.category === 'Зарлал' || n.category === 'Элсэлт');
+    const regularNews = publicData.news.filter(n => n.category !== 'Зарлал');
 
     container.innerHTML = `
-        <!-- 1. ШУТИС КООСЭН ЗАГВАРЫН 4 МЭРГЭЖЛИЙН ХЭСЭГ -->
-        <section class="kosen-hero-section">
-            <div class="kosen-hero-grid">
-                ${leftProgs.map((p, i) => `
-                    <div class="major-card" onclick="openAdmissions('${p.name}')">
-                        <div class="major-top-tag">${p.engName || 'ENGINEER'}</div>
-                        <div class="major-visual" style="background:linear-gradient(135deg, ${majorColors[i]}, #0f172a);">
-                            <div class="major-quota-pill ${p.enrolled >= p.quota ? 'full' : 'open'}">
-                                ${p.enrolled >= p.quota ? t('quota_full') : `${t('quota_seats')}: ${p.enrolled}/${p.quota}`}
-                            </div>
-                            <span style="font-size:44px;">${i === 0 ? '💻' : '⚡'}</span>
-                        </div>
-                        <div class="major-bottom-bar">${p.name}</div>
-                    </div>
-                `).join('')}
-
-                <div class="major-center-box">
-                    <div class="logo-circle" style="width:92px; height:92px; font-size:13px; border-width:3px; margin:0 auto 14px;">
-                        ХААИС<br>ДАРХАН<br>КООСЭН
-                    </div>
-                    <h3>${t('kosen_slogan')}</h3>
-                </div>
-
-                ${rightProgs.map((p, i) => `
-                    <div class="major-card" onclick="openAdmissions('${p.name}')">
-                        <div class="major-top-tag">${p.engName || 'ENGINEER'}</div>
-                        <div class="major-visual" style="background:linear-gradient(135deg, ${majorColors[i + 2]}, #0f172a);">
-                            <div class="major-quota-pill ${p.enrolled >= p.quota ? 'full' : 'open'}">
-                                ${p.enrolled >= p.quota ? t('quota_full') : `${t('quota_seats')}: ${p.enrolled}/${p.quota}`}
-                            </div>
-                            <span style="font-size:44px;">${i === 0 ? '⚙️' : '🏗️'}</span>
-                        </div>
-                        <div class="major-bottom-bar">${p.name}</div>
-                    </div>
-                `).join('')}
-            </div>
-        </section>
-
-        <!-- 2. МУИС ЗАГВАРЫН "ЦӨӨН МӨРӨӨР" & ТЭРГҮҮН МЭДЭЭ -->
-        <section class="num-section">
-            <div class="ticker-bar">
+        <section class="num-section" style="padding-top: 22px;">
+            <div class="ticker-bar" style="cursor:pointer;" onclick="${announcements[0] ? `openArticle(${announcements[0].id})` : ''}">
                 <span class="ticker-badge">${t('ticker_badge')}</span>
                 <span class="ticker-text">
                     ${announcements[0] ? announcements[0].title : '2026 оны намрын улирлын хичээл сонголт болон элсэлтийн мэдээлэл гарлаа.'}
@@ -69,25 +26,26 @@ function renderPublicHome() {
 
             ${featured ? `
             <div class="num-featured-grid">
-                <div class="num-main-news" style="background:linear-gradient(180deg, rgba(0,0,0,0.15), rgba(0,0,0,0.85)), ${featured.imageUrl ? `url('${featured.imageUrl}') center/cover` : (featured.imageColor || '#0e4d2d')};"
+                <div class="num-main-news" style="background:linear-gradient(180deg, rgba(0,0,0,0.12), rgba(0,0,0,0.86)), ${featured.imageUrl ? `url('${featured.imageUrl}') center/cover` : (featured.imageColor || '#0e4d2d')};"
                      onclick="openArticle(${featured.id})">
-                    <span class="news-cat-pill">${t('featured_news')}</span>
+                    <span class="news-cat-pill">${featured.category || t('featured_news')}</span>
                     <h2>${featured.title}</h2>
                     <p>${featured.summary}</p>
-                    <small>🕒 ${featured.date}</small>
+                    <small>${featured.date}  •  ${featured.views || 1} уншсан</small>
                 </div>
                 <div class="num-side-grid">
                     ${sideNews.map(n => `
-                        <div class="num-side-card" style="background:linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.88)), ${n.imageUrl ? `url('${n.imageUrl}') center/cover` : (n.imageColor || '#1e293b')};"
+                        <div class="num-side-card" style="background:linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.88)), ${n.imageUrl ? `url('${n.imageUrl}') center/cover` : (n.imageColor || '#1e293b')};"
                              onclick="openArticle(${n.id})">
+                            <span class="side-cat-tag">${n.category || 'Мэдээ'}</span>
                             <h4>${n.title}</h4>
-                            <small>🕒 ${n.date}</small>
+                            <small>${n.date}</small>
                         </div>
                     `).join('')}
                 </div>
             </div>` : ''}
 
-            <!-- 3. МЭДЭЭ & ЗАРЛАЛ (2 БАГАНА) -->
+            <!-- МЭДЭЭ & ЗАРЛАЛ (2 БАГАНА) -->
             <div class="num-two-col">
                 <div>
                     <div class="sec-bar"><span>${t('sec_news')}</span></div>
@@ -95,12 +53,13 @@ function renderPublicHome() {
             regularNews.map(n => `
                         <div class="news-list-item" style="cursor:pointer;" onclick="openArticle(${n.id})">
                             <div class="news-thumb" style="background:${n.imageUrl ? `url('${n.imageUrl}') center/cover` : (n.imageColor || '#0e4d2d')};">
-                                ${n.imageUrl ? '' : '📰'}
+                                ${n.imageUrl ? '' : '<span style="font-size:11px; font-weight:700; letter-spacing:0.6px; color:#fff;">KOSEN</span>'}
                             </div>
                             <div>
+                                <span class="news-mini-cat">${n.category || 'Мэдээ'}</span>
                                 <h4>${n.title}</h4>
                                 <p>${n.summary}</p>
-                                <small>🕒 ${n.date}</small>
+                                <small>${n.date}  •  ${n.views || 1} уншсан</small>
                             </div>
                         </div>
                     `).join('')}
@@ -110,10 +69,10 @@ function renderPublicHome() {
                     ${announcements.length === 0 ? '<p style="color:var(--muted);">Зарлал одоогоор алга.</p>' :
             announcements.map(a => `
                         <div class="announce-item" style="cursor:pointer;" onclick="openArticle(${a.id})">
-                            <div class="announce-tag">${t('sec_announce')}</div>
+                            <div class="announce-tag">${a.category || t('sec_announce')}</div>
                             <div>
                                 <h4>${a.title}</h4>
-                                <small>🕒 ${a.date}</small>
+                                <small>${a.date}</small>
                             </div>
                         </div>
                     `).join('')}
@@ -158,7 +117,7 @@ function renderAdmissionsPage(preselectProgram = '') {
         </div>
 
         <div class="moodle-card" style="margin-top:22px;">
-            <div class="card-title">📝 Элсэлтийн цахим бүртгэл (ЭЕШ-ийн оноо & Төлбөрийн хөнгөлөлт)</div>
+            <div class="card-title">Элсэлтийн цахим бүртгэл (ЭЕШ-ийн оноо ба Төлбөрийн хөнгөлөлт)</div>
             <div class="input-row">
                 <div class="input-group">
                     <label>Овог, Нэр:</label>
@@ -193,7 +152,7 @@ function renderAdmissionsPage(preselectProgram = '') {
 
             <div class="discount-preview" id="adm-discount-box"></div>
 
-            <button class="btn-primary" style="margin-top:14px;" onclick="submitAdmissionForm()">✓ Бүртгэл илгээх</button>
+            <button class="btn-primary" style="margin-top:14px;" onclick="submitAdmissionForm()">Бүртгэл илгээх</button>
         </div>
     `;
 
@@ -246,36 +205,312 @@ function submitAdmissionForm() {
     });
 }
 
-// ================= ДЭЭД ЦЭСНИЙ МЭДЭЭЛЛИЙН ЦОНХ =================
+// ================= ДЭЭД ЦЭСНИЙ БҮТЭН ХУУДСУУД (БИДНИЙ ТУХАЙ, ХӨТӨЛБӨР, Г.М.) =================
 const PUB_INFO_DATA = {
-    about: { title: 'Сургуулийн танилцуулга', body: 'ХААИС-ийн харьяа Дархан Коосэн Технологийн Коллеж нь Япон улсын үндэсний Коосэн (KOSEN) сургалтын тогтолцоог Монгол Улсад нутагшуулж, ЕБС-ийн 9-р анги төгсөгчдийг 5 жилийн хугацаанд онол, дадлага хосолсон чадварлаг инженер болгон бэлтгэдэг.' },
-    vision: { title: 'Алсын хараа, Эрхэм зорилго', body: '<b>Алсын хараа:</b> Олон улсад өрсөлдөх чадвартай, бүтээлч инженерүүдийг бэлтгэх бүсийн тэргүүлэх технологийн коллеж болох.<br><br><b>Эрхэм зорилго:</b> Практик ур чадвар, инженерийн ёс зүй, япон хэлний мэдлэгтэй мэргэжилтэн бэлтгэх.' },
-    history: { title: 'Түүхэн замнал', body: 'Дархан-Уул аймагт инженерийн боловсролыг хөгжүүлэх зорилгоор байгуулагдаж, Япон улсын Токиогийн Коосэн болон үйлдвэр аж ахуйн байгууллагуудтай нягт хамтран ажиллаж байна.' },
-    it: { title: 'Мэдээллийн технологи (IT Engineer)', body: 'Програм хангамж, веб болон гар утасны хөгжүүлэлт, хиймэл оюун ухаан, өгөгдлийн сан, микроконтроллер (Arduino, Raspberry Pi) болон автоматжуулалтын чиглэлээр мэргэшүүлнэ.' },
-    elec: { title: 'Цахилгаан инженерчлэл', body: 'Цахилгаан хангамж, электрон хэлхээ, дижитал логик, сэргээгдэх эрчим хүч болон үйлдвэрийн автоматжуулалтын инженер бэлтгэнэ.' },
-    mech: { title: 'Механик инженерчлэл', body: 'Машин үйлдвэрлэл, CAD/CAM зураг төсөл, робот техник, металл боловсруулалт болон үйлдвэрлэлийн тоног төхөөрөмжийн инженер бэлтгэнэ.' },
-    civil: { title: 'Барилгын инженерчлэл', body: 'Барилгын бүтээц, зураг төсөл, геодези, дэд бүтэц болон орчин үеийн ногоон барилгын технологийн инженер бэлтгэнэ.' },
-    schedule: { title: 'Сургалтын нэгдсэн хуваарь', body: 'Намрын улирал: 9-р сарын 1 – 12-р сарын 25.<br>Хаврын улирал: 1-р сарын 20 – 5-р сарын 30.<br>Үйлдвэрлэлийн дадлага: 6-р сард зохион байгуулагдана.' },
-    scholarship: { title: 'Тэтгэлэг ба төлбөрийн хөнгөлөлт', body: '• ЭЕШ 750+ оноотой элсэгч: <b>100% хөнгөлөлт</b><br>• ЭЕШ 650+ оноотой элсэгч: <b>50% хөнгөлөлт</b><br>• ЭЕШ 550+ оноотой элсэгч: <b>25% хөнгөлөлт</b><br>• Мөн голч оноо 3.6+ оюутнууд Япон улсын тэтгэлэгт хамрагдах боломжтой.' },
-    dorm: { title: 'Оюутны дотуур байр', body: 'Хөдөө орон нутгаас ирж суралцаж буй оюутнуудад зориулсан дулаан, тохилог, өндөр хурдны интернет бүхий оюутны дотуур байртай.' },
-    japan: { title: 'Япон улсын Коосэн хамтын ажиллагаа', body: 'Төгсөгчид Япон улсын их сургуулиудын 3-р курст шууд дэвшин суралцах болон Японы технологийн компаниудад инженерээр ажиллах өргөн боломжтой.' },
-    exchange: { title: 'Оюутан солилцооны хөтөлбөр', body: 'Жил бүр шилдэг оюутнууд Токиогийн Шинагава Коосэн болон хамтрагч сургуулиудад богино болон урт хугацааны солилцооны хөтөлбөрт хамрагддаг.' },
-    contact: { title: 'Холбоо барих', body: '<b>Хаяг:</b> Дархан-Уул аймаг, Дархан сум, ХААИС-ийн хичээлийн байр<br><b>Утас:</b> 7037-3737<br><b>Имэйл:</b> info@kosen.edu.mn<br><b>Ажлын цаг:</b> Даваа–Баасан, 08:30 – 17:30' }
+    about: {
+        section: 'Бидний тухай',
+        title: 'Сургуулийн танилцуулга',
+        lead: 'ХААИС-ийн харьяа Дархан Коосэн Технологийн Коллеж нь Япон улсын үндэсний Коосэн (KOSEN) сургалтын тогтолцоог Монгол Улсад хэрэгжүүлэгч инженерийн коллеж юм.',
+        body: `
+            <p>Дархан Коосэн Технологийн Коллеж нь ерөнхий боловсролын сургуулийн 9-р анги төгсөгчдийг элсүүлэн авч, 5 жилийн нэгдсэн хөтөлбөрөөр онол, практик дадлагыг хослуулан сургаж, олон улсын жишигт нийцсэн инженерийн дэд бакалаврын зэрэгтэй мэргэжилтэн бэлтгэдэг.</p>
+            <h3>Сургалтын гол онцлог</h3>
+            <ul class="info-list">
+                <li><b>5 жилийн тасралтгүй тогтолцоо:</b> Ахлах сургууль болон дээд боловсролын суурь хичээлүүдийг давхардалгүйгээр цогц байдлаар үзнэ.</li>
+                <li><b>Лаборатори ба дадлага төвтэй сургалт:</b> 1-р курсээс эхлэн инженерийн лаборатори, төсөлт ажил, үйлдвэрлэлийн дадлагад хамрагдана.</li>
+                <li><b>Япон хэл ба соёл:</b> 5 жилийн турш системтэйгээр Япон хэл судалж, JLPT N3–N2 түвшинд хүрэх боломжтой.</li>
+            </ul>
+            <div class="info-stats-grid">
+                <div class="info-stat-box"><b>5 жил</b><span>Нэгдсэн хөтөлбөр</span></div>
+                <div class="info-stat-box"><b>4 салбар</b><span>Инженерийн чиглэл</span></div>
+                <div class="info-stat-box"><b>70%</b><span>Практик ба лаборатори</span></div>
+            </div>
+        `
+    },
+    vision: {
+        section: 'Бидний тухай',
+        title: 'Алсын хараа, Эрхэм зорилго',
+        lead: 'Олон улсад өрсөлдөх чадвартай, бүтээлч сэтгэлгээтэй инженер бэлтгэх нь бидний үндсэн чиг шугам юм.',
+        body: `
+            <h3>Алсын хараа</h3>
+            <p>Монгол Улсын бүс нутгийн хөгжлийг түүчээлэх, Япон загварын инженерийн боловсролоор олон улсад хүлээн зөвшөөрөгдсөн тэргүүлэх технологийн коллеж болох.</p>
+            <h3>Эрхэм зорилго</h3>
+            <p>Онолын бат бөх мэдлэг, практик ур чадвар, инженерийн ёс зүй болон гадаад хэлний өндөр чадамжтай, хөдөлмөрийн зах зээлд бэлэн мэргэжилтэн бэлтгэх.</p>
+            <h3>Үнэт зүйлс</h3>
+            <ul class="info-list">
+                <li><b>Монозүкүри (Monozukuri):</b> Бүтээн байгуулалт, чанар, нягт нямбай хандлагыг эрхэмлэх.</li>
+                <li><b>Бие даасан байдал:</b> Асуудлыг өөрөө олж харах, судалгаа шинжилгээ хийж шийдэл боловсруулах.</li>
+                <li><b>Хамтын ажиллагаа:</b> Багаар ажиллах соёл, ёс зүй, хариуцлагыг төлөвшүүлэх.</li>
+            </ul>
+        `
+    },
+    history: {
+        section: 'Бидний тухай',
+        title: 'Түүхэн замнал',
+        lead: 'Дархан-Уул аймагт инженерийн боловсролын шинэ жишгийг тогтоон, Япон–Монголын боловсролын хамтын ажиллагааг өргөжүүлж байна.',
+        body: `
+            <p>Хөдөө Аж Ахуйн Их Сургуулийн бүрэлдэхүүн Дархан Коосэн Технологийн Коллеж нь бүс нутгийн үйлдвэрлэл, дэд бүтэц, мэдээллийн технологийн салбарт чадварлаг инженерүүдийг орон нутагт нь бэлтгэх зорилгоор байгуулагдсан.</p>
+            <table class="grades-table" style="margin-top:16px;">
+                <thead><tr><th style="width:120px;">Он</th><th>Гол үйл явдал</th></tr></thead>
+                <tbody>
+                    <tr><td><b>Үүсгэн байгуулалт</b></td><td>Японы Коосэн хөтөлбөрийн жишгээр сургалтын төлөвлөгөө боловсруулж, элсэлт авч эхэлсэн.</td></tr>
+                    <tr><td><b>Хамтын ажиллагаа</b></td><td>Японы түнш Коосэн сургуулиуд болон үйлдвэр технологийн компаниудтай санамж бичиг байгуулсан.</td></tr>
+                    <tr><td><b>2025–2026 он</b></td><td>Лабораторийн баазыг шинэчилж, оюутан солилцоо болон цахим сургалтын нэгдсэн системийг нэвтрүүлсэн.</td></tr>
+                </tbody>
+            </table>
+        `
+    },
+    it: {
+        section: 'Хөтөлбөр',
+        title: 'Мэдээллийн технологи (Information Technology)',
+        lead: 'Програм хангамж, систем хөгжүүлэлт, өгөгдлийн сан, сүлжээ болон IoT автоматжуулалтын чиглэлээр мэргэшүүлнэ.',
+        applyProgram: 'Мэдээллийн технологи',
+        body: `
+            <p>Мэдээллийн технологийн хөтөлбөр нь орчин үеийн програм хангамжийн инженерчлэл болон техник хангамжийн интеграцчилалыг хослуулан эзэмшүүлэх зорилготой.</p>
+            <h3>Үндсэн мэргэжлийн хичээлүүд</h3>
+            <ul class="info-list">
+                <li>Визуал програмчлал (C# WinForms / .NET), Java, Вэб хөгжүүлэлт (HTML, CSS, JavaScript)</li>
+                <li>Үйлдлийн систем, Компьютерийн сүлжээ, Өгөгдлийн сангийн удирдлагын систем (MySQL)</li>
+                <li>Электрон хэлхээ, Дижитал логик, Микроконтроллер ба IoT (Arduino, Raspberry Pi)</li>
+                <li>Алгоритм ба өгөгдлийн бүтэц, Инженерийн математик, Япон хэл</li>
+            </ul>
+            <h3>Төгсөгчийн ажлын байр</h3>
+            <p>Програм хангамжийн инженер, Full-stack веб хөгжүүлэгч, Систем ба сүлжээний администратор, Автоматжуулалт ба IoT инженер.</p>
+        `
+    },
+    elec: {
+        section: 'Хөтөлбөр',
+        title: 'Цахилгаан инженерчлэл (Electrical Engineering)',
+        lead: 'Цахилгаан хангамж, электроник, автомат удирдлага болон сэргээгдэх эрчим хүчний мэргэжилтэн бэлтгэнэ.',
+        applyProgram: 'Цахилгаан инженерчлэл',
+        body: `
+            <p>Цахилгаан инженерчлэлийн хөтөлбөр нь үйлдвэр, барилгын цахилгаан хангамж, электрон төхөөрөмжийн зохион бүтээлт, реле хамгаалалт болон автоматжуулалтын гүнзгий мэдлэг олгоно.</p>
+            <h3>Үндсэн чиглэлүүд</h3>
+            <ul class="info-list">
+                <li>Цахилгаан хэлхээний онол ба аналог, тоон электроник</li>
+                <li>Цахилгаан машин, трансформатор, эрчим хүчний дамжуулалт</li>
+                <li>PLC програмчлал ба үйлдвэрлэлийн автомат удирдлагын систем</li>
+                <li>Сэргээгдэх эрчим хүчний эх үүсвэр ба хэмжил зүй</li>
+            </ul>
+        `
+    },
+    mech: {
+        section: 'Хөтөлбөр',
+        title: 'Механик инженерчлэл (Mechanical Engineering)',
+        lead: 'Машин үйлдвэрлэл, CAD/CAM зураг төсөл, робот техник болон үйлдвэрийн тоног төхөөрөмжийн инженер бэлтгэнэ.',
+        applyProgram: 'Механик инженерчлэл',
+        body: `
+            <p>Механик инженерчлэлийн хөтөлбөр нь инженерийн зураг зүй, материалын эсэргүүцэл, машин механизмын зохион бүтээлт, CNC болон робот техникийн практик чадварыг олгоно.</p>
+            <h3>Үндсэн чиглэлүүд</h3>
+            <ul class="info-list">
+                <li>Инженерийн 3D загварчлал (CAD/CAM/CAE) ба техникийн зураг зүй</li>
+                <li>Материалын эсэргүүцэл, Термодинамик ба Шингэний механик</li>
+                <li>Мехатроник, робот техник ба металл боловсруулалтын технологи</li>
+            </ul>
+        `
+    },
+    civil: {
+        section: 'Хөтөлбөр',
+        title: 'Барилгын инженерчлэл (Civil Engineering)',
+        lead: 'Барилгын бүтээц, зураг төсөл, геодези, дэд бүтэц болон ногоон барилгын технологийн инженер бэлтгэнэ.',
+        applyProgram: 'Барилгын инженерчлэл',
+        body: `
+            <p>Барилгын инженерчлэлийн хөтөлбөр нь иргэний болон үйлдвэрийн барилга байгууламжийн тооцоо, зураг төсөл, барилгын материалын шинжилгээ, талбайн удирдлагын цогц мэдлэг олгоно.</p>
+            <h3>Үндсэн чиглэлүүд</h3>
+            <ul class="info-list">
+                <li>Барилгын механик, Төмөр бетон ба металл бүтээц</li>
+                <li>Геодези, Хөрсний механик ба суурийн тооцоо</li>
+                <li>Барилгын зураг төсөл (AutoCAD, BIM) ба төслийн менежмент</li>
+            </ul>
+        `
+    },
+    schedule: {
+        section: 'Сургалтын үйл ажиллагаа',
+        title: 'Сургалтын нэгдсэн хуваарь',
+        lead: '2026–2027 оны хичээлийн жилийн улирал, шалгалт болон үйлдвэрлэлийн дадлагын нэгдсэн календарь.',
+        body: `
+            <table class="grades-table">
+                <thead><tr><th>Үйл ажиллагаа</th><th>Хугацаа</th><th>Тайлбар</th></tr></thead>
+                <tbody>
+                    <tr><td><b>Намрын улирал</b></td><td>9-р сарын 1 – 12-р сарын 25</td><td>16 долоо хоногийн танхимын сургалт</td></tr>
+                    <tr><td><b>Намрын шалгалтын 7 хоног</b></td><td>12-р сарын 15 – 12-р сарын 25</td><td>Улирлын эцсийн шалгалт, тайлан хамгаалалт</td></tr>
+                    <tr><td><b>Өвлийн амралт</b></td><td>12-р сарын 26 – 1-р сарын 19</td><td>Оюутны амралт</td></tr>
+                    <tr><td><b>Хаврын улирал</b></td><td>1-р сарын 20 – 5-р сарын 30</td><td>16 долоо хоногийн танхимын сургалт</td></tr>
+                    <tr><td><b>Үйлдвэрлэлийн дадлага</b></td><td>6-р сарын 1 – 6-р сарын 25</td><td>3–5-р курсийн оюутнууд үйлдвэр, байгууллагад дадлага хийнэ</td></tr>
+                </tbody>
+            </table>
+        `
+    },
+    scholarship: {
+        section: 'Сургалтын үйл ажиллагаа',
+        title: 'Тэтгэлэг ба төлбөрийн хөнгөлөлт',
+        lead: 'Сурлагын амжилт болон ЭЕШ-ийн онооноос хамааран 25%–100% хүртэлх сургалтын төлбөрийн хөнгөлөлт, гадаад тэтгэлэгт хамрагдах боломжтой.',
+        body: `
+            <h3>Элсэгчдэд олгох ЭЕШ-ийн тэтгэлэг</h3>
+            <table class="grades-table">
+                <thead><tr><th>Болзол (ЭЕШ-ийн оноо)</th><th>Хөнгөлөлтийн хувь</th><th>Хамрах хугацаа</th></tr></thead>
+                <tbody>
+                    <tr><td>750 болон түүнээс дээш</td><td><b>100% чөлөөлнө</b></td><td>Эхний хичээлийн жил</td></tr>
+                    <tr><td>650 – 749 оноо</td><td><b>50% хөнгөлнө</b></td><td>Эхний хичээлийн жил</td></tr>
+                    <tr><td>550 – 649 оноо</td><td><b>25% хөнгөлнө</b></td><td>Эхний хичээлийн жил</td></tr>
+                </tbody>
+            </table>
+            <h3 style="margin-top:20px;">Суралцагчдын урамшуулалт тэтгэлэг</h3>
+            <ul class="info-list">
+                <li>Голч дүн 3.6-аас дээш суралцагчид Япон улсын засгийн газар (MEXT) болон хамтрагч байгууллагуудын тэтгэлэгт нэр дэвших эрхтэй.</li>
+                <li>Улсын болон олон улсын олимпиад, Робокон тэмцээнд шагналт байр эзэлсэн оюутнуудад сургуулийн нэрэмжит тэтгэлэг олгоно.</li>
+            </ul>
+        `
+    },
+    dorm: {
+        section: 'Сургалтын үйл ажиллагаа',
+        title: 'Оюутны дотуур байр',
+        lead: 'Хөдөө орон нутгаас ирж суралцаж буй оюутнуудад зориулсан аюулгүй, тохилог амьдрах орчин.',
+        body: `
+            <p>ХААИС-ийн Дархан дахь оюутны дотуур байр нь хичээлийн байртай ойр байрладаг бөгөөд оюутнуудын сурч боловсрох, амрах нөхцөлийг бүрэн хангасан.</p>
+            <h3>Нөхцөл ба боломжууд</h3>
+            <ul class="info-list">
+                <li>Өндөр хурдны утасгүй интернэт (Wi-Fi) болон хичээл давтах уншлагын өрөө</li>
+                <li>24 цагийн харуул хамгаалалт, камерын хяналт, жижүүр багшийн хяналт</li>
+                <li>Халуун хүйтэн ус, гал тогоо, хувцас угаалгын хэсэг</li>
+                <li>Спорт заал болон чөлөөт цагийн танхим ашиглах боломж</li>
+            </ul>
+        `
+    },
+    japan: {
+        section: 'Гадаад харилцаа',
+        title: 'Япон улсын Коосэн хамтын ажиллагаа',
+        lead: 'Японы үндэсний Коосэн (NIT) болон технологийн их сургуулиудтай нягт хамтран ажиллаж, төгсөгчдөд дэвшин суралцах болон ажиллах гүүр болдог.',
+        body: `
+            <p>Дархан Коосэн нь Японы инженерийн боловсролын стандартыг нэвтрүүлснээр төгсөгчид Япон улсын их сургуулиудын 3-р курст шууд шилжин суралцах, мөн Японы технологи, электроник, IT компаниудад үндсэн инженерээр ажиллах өргөн боломжтой.</p>
+            <h3>Хамтын ажиллагааны чиглэлүүд</h3>
+            <ul class="info-list">
+                <li>Япон багш, мэргэжилтнүүдийн зочин лекц болон хамтарсан сургалт</li>
+                <li>Токио болон бусад хотуудын технологийн компаниудтай ажлын ярилцлага, танилцах дадлага</li>
+                <li>Японы их сургуулиудад (3-р курс рүү) элсэх бэлтгэл болон зөвлөгөө</li>
+            </ul>
+        `
+    },
+    exchange: {
+        section: 'Гадаад харилцаа',
+        title: 'Оюутан солилцооны хөтөлбөр',
+        lead: 'Шилдэг оюутнууд жил бүр Токиогийн түнш Коосэн сургуульд богино болон урт хугацааны солилцооны хөтөлбөрт хамрагддаг.',
+        body: `
+            <p>Оюутан солилцооны хөтөлбөрийн хүрээнд оюутнууд Япон улсын Коосэн сургуулийн хичээл, лабораторийн орчинд суралцаж, технологийн музей, үйлдвэрүүдтэй танилцан, Япон оюутнуудтай хамтарсан төсөл хэрэгжүүлдэг.</p>
+            <h3>Шалгуур үзүүлэлт</h3>
+            <ul class="info-list">
+                <li>Сурлагын голч дүн 3.5 болон түүнээс дээш байх</li>
+                <li>Япон хэлний JLPT N5–N3 түвшний мэдлэгтэй байх</li>
+                <li>Сургуулийн олон нийтийн ажил, клуб, тэмцээнд идэвхтэй оролцдог байх</li>
+            </ul>
+        `
+    },
+    contact: {
+        section: 'Холбоо барих',
+        title: 'Холбоо барих мэдээлэл',
+        lead: 'Элсэлт, сургалт болон хамтын ажиллагаатай холбоотой бүх асуудлаар доорх хаягаар холбогдоно уу.',
+        body: `
+            <table class="grades-table">
+                <tbody>
+                    <tr><td style="width:180px; color:var(--muted);">Байршил / Хаяг</td><td><b>Дархан-Уул аймаг, Дархан сум, ХААИС-ийн хичээлийн байр</b></td></tr>
+                    <tr><td style="color:var(--muted);">Утасны дугаар</td><td><b>7037-3737</b></td></tr>
+                    <tr><td style="color:var(--muted);">Албан ёсны имэйл</td><td><b>info@kosen.edu.mn</b></td></tr>
+                    <tr><td style="color:var(--muted);">Ажлын цаг</td><td>Даваа – Баасан, 08:30 – 17:30 (Цайны цаг 12:30 – 13:30)</td></tr>
+                </tbody>
+            </table>
+            <div style="margin-top:20px; padding:16px 18px; background:var(--surface-2, #f8fafc); border:1px solid var(--border, #e2e8f0); border-radius:10px;">
+                <b style="display:block; margin-bottom:6px;">Элсэлтийн комисс</b>
+                <p style="margin:0; font-size:14px; color:var(--muted);">Цахим элсэлтийн бүртгэл болон ЭЕШ-ийн тэтгэлгийн тооцоолуурыг «Элсэлт» цэсээр орж шууд ашиглах боломжтой.</p>
+                <button class="btn-primary" style="margin-top:12px;" onclick="openAdmissions()">Элсэлтийн хуудас руу очих</button>
+            </div>
+        `
+    }
 };
 
 function openPubInfo(key) {
     const info = PUB_INFO_DATA[key];
     if (!info) return;
-    document.getElementById('pub-info-title').innerText = info.title;
-    document.getElementById('pub-info-body').innerHTML = info.body;
-    document.getElementById('pub-info-modal').classList.add('open');
+
+    closePubInfo();
+    showView('view-article');
+    renderPubInfoPage(key, info);
+    window.scrollTo(0, 0);
+}
+
+function renderPubInfoPage(activeKey, info) {
+    const body = document.getElementById('article-detail-body');
+    if (!body) return;
+
+    // Тухайн бүлгийн болон бусад үндсэн хуудсуудыг баруун цэсэнд харуулах
+    const sameSectionKeys = Object.keys(PUB_INFO_DATA).filter(k => PUB_INFO_DATA[k].section === info.section);
+    const otherSectionKeys = Object.keys(PUB_INFO_DATA).filter(k => PUB_INFO_DATA[k].section !== info.section).slice(0, 6);
+
+    body.innerHTML = `
+        <div class="article-layout">
+            <!-- ЗҮҮН БАГАНА: БҮТЭН МЭДЭЭЛЛИЙН ХУУДАС -->
+            <div class="article-main">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
+                    <span class="news-cat-pill" style="background:var(--green-dark); color:#ffffff;">${info.section}</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="m-select" style="cursor:pointer; font-size:12.5px;" onclick="printPubInfo('${activeKey}')">Хэвлэх</button>
+                        <button class="m-select" style="cursor:pointer; font-size:12.5px;" onclick="showView('view-public')">Нүүр хуудас</button>
+                    </div>
+                </div>
+
+                <h1 class="article-title">${info.title}</h1>
+
+                <div class="article-lead">${info.lead}</div>
+
+                <div class="article-content info-page-content">
+                    ${info.body}
+                </div>
+
+                ${info.applyProgram ? `
+                    <div style="margin-top:26px; padding-top:18px; border-top:1px solid var(--border, #e2e8f0); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <span style="font-size:14px; color:var(--muted);">Энэ хөтөлбөрт элсэх сонирхолтой бол цахим бүртгэлээ шууд илгээгээрэй.</span>
+                        <button class="btn-primary" onclick="openAdmissions('${info.applyProgram}')">Энэ хөтөлбөрт бүртгүүлэх</button>
+                    </div>
+                ` : ''}
+            </div>
+
+            <!-- БАРУУН БАГАНА: БҮЛГИЙН ЦЭС -->
+            <div class="article-sidebar">
+                <div class="sec-bar"><span>${info.section.toUpperCase()}</span></div>
+                <div class="info-side-nav">
+                    ${sameSectionKeys.map(k => `
+                        <button class="info-side-btn ${k === activeKey ? 'active' : ''}" onclick="openPubInfo('${k}')">
+                            ${PUB_INFO_DATA[k].title}
+                        </button>
+                    `).join('')}
+                </div>
+
+                <div class="sec-bar" style="margin-top:22px;"><span>БУСАД МЭДЭЭЛЭЛ</span></div>
+                <div class="info-side-nav">
+                    ${otherSectionKeys.map(k => `
+                        <button class="info-side-btn" onclick="openPubInfo('${k}')">
+                            ${PUB_INFO_DATA[k].title}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function printPubInfo(key) {
+    const info = PUB_INFO_DATA[key];
+    if (!info) return;
+    printDocument(info.title, `
+        <p style="color:#475569; font-size:13px;"><b>Бүлэг:</b> ${info.section}</p>
+        <p style="font-weight:600; margin:12px 0;">${info.lead}</p>
+        <div style="font-size:14px; line-height:1.8;">${info.body}</div>
+    `);
 }
 
 function closePubInfo() {
-    document.getElementById('pub-info-modal').classList.remove('open');
+    document.getElementById('pub-info-modal')?.classList.remove('open');
 }
 
-// ================= МЭДЭЭНИЙ ДЭЛГЭРЭНГҮЙ (МУИС ЗАГВАР) =================
+// ================= МЭДЭЭНИЙ ДЭЛГЭРЭНГҮЙ (УРТ МЭДЭЭ УНШИХ ЦОНХ) =================
 function openArticle(id) {
     const article = publicData.news.find(n => n.id === id);
     if (!article) return;
@@ -293,23 +528,31 @@ function renderArticleDetail(article) {
     const body = document.getElementById('article-detail-body');
     if (!body) return;
 
-    // Их уншсан 5 мэдээ (үзэлтийн тоогоор буурах)
     const mostRead = [...publicData.news]
         .sort((a, b) => (b.views || 0) - (a.views || 0))
         .slice(0, 5);
 
-    const paragraphs = (article.content || article.summary || '').split('\n').filter(p => p.trim() !== '');
+    const rawText = (article.content || article.summary || '').replace(/\\n/g, '\n');
+    const paragraphs = rawText.split('\n').map(p => p.trim()).filter(p => p !== '');
+    const wordCount = rawText.split(/\s+/).filter(Boolean).length;
+    const readMins = Math.max(1, Math.ceil(wordCount / 160));
+
     const imgHtml = article.imageUrl
         ? `<img src="${article.imageUrl}" class="article-img-${article.imagePosition || 'top'}" alt="Мэдээний зураг">`
-        : '';
+        : `<div class="article-cover-placeholder" style="background:linear-gradient(135deg, ${article.imageColor || '#0b3b24'}, #0f172a);">
+               <div class="logo-circle" style="width:58px; height:58px;">ХААИС</div>
+               <div>
+                   <div style="font-weight:800; font-size:15px;">ДАРХАН КООСЭН МЭДЭЭ</div>
+                   <div style="font-size:12px; opacity:0.8;">${article.category || 'Албан ёсны мэдээлэл'} • ${article.date}</div>
+               </div>
+           </div>`;
 
     let contentHtml = '';
-    if (article.imagePosition === 'middle' && paragraphs.length > 1) {
+    if (article.imageUrl && article.imagePosition === 'middle' && paragraphs.length > 1) {
         contentHtml = `<p>${paragraphs[0]}</p>${imgHtml}${paragraphs.slice(1).map(p => `<p>${p}</p>`).join('')}`;
-    } else if (article.imagePosition === 'left') {
+    } else if (article.imageUrl && article.imagePosition === 'left') {
         contentHtml = `<div class="article-float-wrap">${imgHtml}${paragraphs.map(p => `<p>${p}</p>`).join('')}</div>`;
     } else {
-        // default: top
         contentHtml = `${imgHtml}${paragraphs.map(p => `<p>${p}</p>`).join('')}`;
     }
 
@@ -317,12 +560,21 @@ function renderArticleDetail(article) {
         <div class="article-layout">
             <!-- ЗҮҮН БАГАНА: ҮНДСЭН МЭДЭЭ -->
             <div class="article-main">
-                <span class="news-cat-pill" style="background:var(--green-dark); color:white;">${article.category}</span>
-                <h1 class="article-title">${article.title}</h1>
-                <div class="article-meta">
-                    <span>🕒 ${article.date}</span>
-                    <span>👁️ ${article.views || 1} уншсан</span>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+                    <span class="news-cat-pill" style="background:var(--green-dark); color:white;">${article.category || 'Мэдээ'}</span>
+                    <button class="m-select" style="cursor:pointer; font-size:12.5px;" onclick="printArticle(${article.id})">Хэвлэх</button>
                 </div>
+
+                <h1 class="article-title">${article.title}</h1>
+
+                <div class="article-meta">
+                    <span>Огноо: ${article.date}</span>
+                    <span>Үзсэн: ${article.views || 1}</span>
+                    <span>Унших хугацаа: ~${readMins} мин</span>
+                </div>
+
+                ${article.summary ? `<div class="article-lead">${article.summary}</div>` : ''}
+
                 <div class="article-content">
                     ${contentHtml}
                 </div>
@@ -334,15 +586,28 @@ function renderArticleDetail(article) {
                 ${mostRead.map(m => `
                     <div class="most-read-item" onclick="openArticle(${m.id})">
                         <div class="most-read-thumb" style="background:${m.imageUrl ? `url('${m.imageUrl}') center/cover` : (m.imageColor || '#0e4d2d')};">
-                            ${m.imageUrl ? '' : '📰'}
+                            ${m.imageUrl ? '' : '<span style="font-size:10px; font-weight:700; color:#fff;">KOSEN</span>'}
                         </div>
                         <div>
                             <h4>${m.title}</h4>
-                            <small>🕒 ${m.date}   •   👁️ ${m.views || 1}</small>
+                            <small>${m.date}  •  ${m.views || 1} уншсан</small>
                         </div>
                     </div>
                 `).join('')}
             </div>
         </div>
     `;
+}
+
+function printArticle(id) {
+    const article = publicData.news.find(n => n.id === id);
+    if (!article) return;
+    const paragraphs = (article.content || article.summary || '').replace(/\\n/g, '\n').split('\n').filter(p => p.trim() !== '');
+    printDocument(article.title, `
+        <p style="color:#475569; font-size:13px;"><b>Ангилал:</b> ${article.category}  |  <b>Огноо:</b> ${article.date}</p>
+        ${article.imageUrl ? `<img src="${article.imageUrl}" style="max-width:100%; max-height:300px; object-fit:cover; border-radius:8px; margin:12px 0;">` : ''}
+        <div style="font-size:14px; line-height:1.8; margin-top:12px;">
+            ${paragraphs.map(p => `<p style="margin-bottom:12px;">${p}</p>`).join('')}
+        </div>
+    `);
 }

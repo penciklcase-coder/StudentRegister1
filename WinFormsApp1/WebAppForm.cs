@@ -310,6 +310,85 @@ namespace WinFormsApp1
                     );
                     break;
 
+                // ================= ИРЦ БҮРТГЭЛ (ATTENDANCE) =================
+                case "getCourseAttendance":
+                    SendCourseAttendance(
+                        root.GetProperty("courseName").GetString() ?? "",
+                        root.GetProperty("date").GetString() ?? DateTime.Now.ToString("yyyy-MM-dd")
+                    );
+                    break;
+
+                case "saveAttendance":
+                    var attRecords = new List<(string StudentId, string Status)>();
+                    if (root.TryGetProperty("records", out var recArr) && recArr.ValueKind == JsonValueKind.Array)
+                    {
+                        foreach (var item in recArr.EnumerateArray())
+                        {
+                            attRecords.Add((
+                                item.GetProperty("studentId").GetString() ?? "",
+                                item.GetProperty("status").GetString() ?? "Ирсэн"
+                            ));
+                        }
+                    }
+                    SaveAttendance(
+                        root.GetProperty("courseName").GetString() ?? "",
+                        root.GetProperty("date").GetString() ?? DateTime.Now.ToString("yyyy-MM-dd"),
+                        attRecords
+                    );
+                    break;
+
+                case "getStudentAttendance":
+                    SendStudentAttendance(root.GetProperty("studentId").GetString() ?? "");
+                    break;
+
+                // ================= ДААЛГАВАР ИЛГЭЭХ & ҮНЭЛЭХ (ASSIGNMENTS) =================
+                case "getSubmissions":
+                    SendSubmissions(
+                        root.GetProperty("role").GetString() ?? "student",
+                        root.GetProperty("userId").GetString() ?? "",
+                        root.GetProperty("courseName").GetString() ?? ""
+                    );
+                    break;
+
+                case "submitAssignment":
+                    SubmitAssignment(
+                        root.GetProperty("materialId").GetInt32(),
+                        root.GetProperty("courseName").GetString() ?? "",
+                        root.GetProperty("studentId").GetString() ?? "",
+                        root.GetProperty("fileName").GetString() ?? "assignment",
+                        root.GetProperty("fileBase64").GetString() ?? "",
+                        root.GetProperty("comment").GetString() ?? ""
+                    );
+                    break;
+
+                case "gradeSubmission":
+                    GradeSubmission(
+                        root.GetProperty("id").GetInt32(),
+                        root.GetProperty("score").GetInt32(),
+                        root.GetProperty("feedback").GetString() ?? ""
+                    );
+                    break;
+
+                // ================= ХИЧЭЭЛИЙН ХУВААРЬ (TIMETABLE) =================
+                case "getTimetable":
+                    SendTimetable();
+                    break;
+
+                case "addTimetableSlot":
+                    AddTimetableSlot(
+                        root.GetProperty("dayOfWeek").GetInt32(),
+                        root.GetProperty("timeSlot").GetString() ?? "08:30 - 10:00",
+                        root.GetProperty("courseName").GetString() ?? "",
+                        root.GetProperty("room").GetString() ?? "",
+                        root.GetProperty("teacherName").GetString() ?? "",
+                        root.GetProperty("courseType").GetString() ?? "Лекц"
+                    );
+                    break;
+
+                case "deleteTimetableSlot":
+                    DeleteTimetableSlot(root.GetProperty("id").GetInt32());
+                    break;
+
                 case "adminAddPayment":
                     AdminAddPayment(
                         root.GetProperty("studentId").GetString() ?? "",
@@ -1476,6 +1555,326 @@ namespace WinFormsApp1
             {
                 SendJson(new { action = "toast", message = "Зурвас илгээх алдаа: " + ex.Message });
             }
+        }
+
+        // ================= ИРЦ БҮРТГЭЛ (ATTENDANCE) =================
+        private void SendCourseAttendance(string courseName, string date)
+        {
+            var list = new List<object>();
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+
+                // Тухайн хичээлд бүртгэлтэй оюутнууд болон тухайн өдрийн ирцийн төлөв
+                string query = @"SELECT s.student_id, s.last_name, s.first_name,
+                                        IFNULL(a.status, 'Ирсэн') AS att_status
+                                 FROM students s
+                                 LEFT JOIN attendance a
+                                     ON s.student_id = a.student_id
+                                     AND a.course_name = @c
+                                     AND a.att_date = @d
+                                 ORDER BY s.first_name ASC";
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@c", courseName);
+                cmd.Parameters.AddWithValue("@d", date);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    list.Add(new
+                    {
+                        studentId = r.GetString("student_id"),
+                        lastName = r.GetString("last_name"),
+                        firstName = r.GetString("first_name"),
+                        status = r.GetString("att_status")
+                    });
+                }
+            }
+            catch { }
+
+            SendJson(new { action = "courseAttendanceData", courseName, date, list });
+        }
+
+        private void SaveAttendance(string courseName, string date, List<(string StudentId, string Status)> records)
+        {
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+
+                string query = @"INSERT INTO attendance (course_name, student_id, att_date, status)
+                                 VALUES (@c, @sid, @d, @st)
+                                 ON DUPLICATE KEY UPDATE status = VALUES(status)";
+
+                foreach (var rec in records)
+                {
+                    using var cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@c", courseName);
+                    cmd.Parameters.AddWithValue("@sid", rec.StudentId);
+                    cmd.Parameters.AddWithValue("@d", date);
+                    cmd.Parameters.AddWithValue("@st", rec.Status);
+                    cmd.ExecuteNonQuery();
+
+                    if (rec.Status == "Тасалсан")
+                    {
+                        AddNotificationInternal(conn, rec.StudentId, $"⚠️ Та {date} өдрийн \"{courseName}\" хичээлийг тасалсан байна.");
+                    }
+                }
+
+                SendJson(new { action = "toast", message = $"{date} өдрийн ирц амжилттай хадгалагдлаа!" });
+                SendCourseAttendance(courseName, date);
+            }
+            catch (Exception ex)
+            {
+                SendJson(new { action = "toast", message = "Ирц хадгалах алдаа: " + ex.Message });
+            }
+        }
+
+        private void SendStudentAttendance(string studentId)
+        {
+            var records = new List<object>();
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+
+                string query = @"SELECT course_name, DATE_FORMAT(att_date, '%Y-%m-%d') AS adate, status
+                                 FROM attendance
+                                 WHERE student_id = @sid
+                                 ORDER BY att_date DESC";
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@sid", studentId);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    records.Add(new
+                    {
+                        courseName = r.GetString("course_name"),
+                        date = r.GetString("adate"),
+                        status = r.GetString("status")
+                    });
+                }
+            }
+            catch { }
+
+            SendJson(new { action = "studentAttendanceData", records });
+        }
+
+        // ================= ДААЛГАВАР ИЛГЭЭХ & ҮНЭЛЭХ (ASSIGNMENTS) =================
+        private void SendSubmissions(string role, string userId, string courseName)
+        {
+            var list = new List<object>();
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+
+                string query = role == "teacher"
+                    ? @"SELECT a.id, a.material_id, a.course_name, a.student_id,
+                               CONCAT(s.last_name, ' ', s.first_name) AS student_name,
+                               IFNULL(m.item_title, 'Бие даалт / Даалгавар') AS mat_title,
+                               a.file_name, a.file_url, a.comment, a.score, a.feedback,
+                               DATE_FORMAT(a.submitted_at, '%Y-%m-%d %H:%i') AS sdate
+                        FROM assignment_submissions a
+                        LEFT JOIN students s ON a.student_id = s.student_id
+                        LEFT JOIN course_materials m ON a.material_id = m.id
+                        WHERE (@c = '' OR a.course_name = @c)
+                        ORDER BY a.id DESC"
+                    : @"SELECT a.id, a.material_id, a.course_name, a.student_id,
+                               '' AS student_name,
+                               IFNULL(m.item_title, 'Бие даалт / Даалгавар') AS mat_title,
+                               a.file_name, a.file_url, a.comment, a.score, a.feedback,
+                               DATE_FORMAT(a.submitted_at, '%Y-%m-%d %H:%i') AS sdate
+                        FROM assignment_submissions a
+                        LEFT JOIN course_materials m ON a.material_id = m.id
+                        WHERE a.student_id = @uid AND (@c = '' OR a.course_name = @c)
+                        ORDER BY a.id DESC";
+
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@uid", userId);
+                cmd.Parameters.AddWithValue("@c", courseName);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    list.Add(new
+                    {
+                        id = r.GetInt32("id"),
+                        materialId = r.GetInt32("material_id"),
+                        courseName = r.GetString("course_name"),
+                        studentId = r.GetString("student_id"),
+                        studentName = r.IsDBNull(r.GetOrdinal("student_name")) ? r.GetString("student_id") : r.GetString("student_name"),
+                        materialTitle = r.GetString("mat_title"),
+                        fileName = r.GetString("file_name"),
+                        fileUrl = r.GetString("file_url"),
+                        comment = r.IsDBNull(r.GetOrdinal("comment")) ? "" : r.GetString("comment"),
+                        score = r.IsDBNull(r.GetOrdinal("score")) ? (int?)null : r.GetInt32("score"),
+                        feedback = r.IsDBNull(r.GetOrdinal("feedback")) ? "" : r.GetString("feedback"),
+                        submittedAt = r.GetString("sdate")
+                    });
+                }
+            }
+            catch { }
+
+            SendJson(new { action = "submissionsData", list });
+        }
+
+        private void SubmitAssignment(int materialId, string courseName, string studentId, string fileName, string fileBase64, string comment)
+        {
+            if (string.IsNullOrWhiteSpace(fileBase64) || !fileBase64.Contains(","))
+            {
+                SendJson(new { action = "toast", message = "Даалгаврын файлаа сонгоно уу." });
+                return;
+            }
+
+            try
+            {
+                string uploadsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "uploads");
+                Directory.CreateDirectory(uploadsDir);
+
+                string ext = Path.GetExtension(fileName);
+                string safeName = $"asg_{studentId}_{DateTime.Now:yyyyMMddHHmmss}_{Guid.NewGuid().ToString("N")[..6]}{ext}";
+                string fullPath = Path.Combine(uploadsDir, safeName);
+
+                byte[] bytes = Convert.FromBase64String(fileBase64.Split(',')[1]);
+                File.WriteAllBytes(fullPath, bytes);
+
+                string fileUrl = $"https://app.kosen/uploads/{safeName}";
+
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+                string query = @"INSERT INTO assignment_submissions (material_id, course_name, student_id, file_name, file_url, comment)
+                                 VALUES (@mid, @c, @sid, @fn, @url, @cmt)";
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@mid", materialId);
+                cmd.Parameters.AddWithValue("@c", courseName);
+                cmd.Parameters.AddWithValue("@sid", studentId);
+                cmd.Parameters.AddWithValue("@fn", fileName);
+                cmd.Parameters.AddWithValue("@url", fileUrl);
+                cmd.Parameters.AddWithValue("@cmt", comment);
+                cmd.ExecuteNonQuery();
+
+                SendJson(new { action = "toast", message = $"\"{fileName}\" даалгавар амжилттай илгээгдлээ!" });
+                SendSubmissions("student", studentId, courseName);
+            }
+            catch (Exception ex)
+            {
+                SendJson(new { action = "toast", message = "Даалгавар илгээх алдаа: " + ex.Message });
+            }
+        }
+
+        private void GradeSubmission(int id, int score, string feedback)
+        {
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+
+                string studentId = "", courseName = "";
+                using (var getCmd = new MySqlCommand("SELECT student_id, course_name FROM assignment_submissions WHERE id = @id", conn))
+                {
+                    getCmd.Parameters.AddWithValue("@id", id);
+                    using var r = getCmd.ExecuteReader();
+                    if (r.Read())
+                    {
+                        studentId = r.GetString("student_id");
+                        courseName = r.GetString("course_name");
+                    }
+                }
+
+                using (var cmd = new MySqlCommand("UPDATE assignment_submissions SET score = @sc, feedback = @fb WHERE id = @id", conn))
+                {
+                    cmd.Parameters.AddWithValue("@sc", score);
+                    cmd.Parameters.AddWithValue("@fb", feedback);
+                    cmd.Parameters.AddWithValue("@id", id);
+                    cmd.ExecuteNonQuery();
+                }
+
+                if (!string.IsNullOrEmpty(studentId))
+                {
+                    AddNotificationInternal(conn, studentId, $"✅ \"{courseName}\" даалгавар үнэлэгдлээ: {score} оноо. {(string.IsNullOrWhiteSpace(feedback) ? "" : "Тайлбар: " + feedback)}");
+                }
+
+                SendJson(new { action = "toast", message = $"Үнэлгээ амжилттай хадгалагдлаа ({score} оноо)!" });
+                SendSubmissions("teacher", "", "");
+            }
+            catch (Exception ex)
+            {
+                SendJson(new { action = "toast", message = "Үнэлэхэд алдаа гарлаа: " + ex.Message });
+            }
+        }
+
+        // ================= ХИЧЭЭЛИЙН ХУВААРЬ (TIMETABLE) =================
+        private void SendTimetable()
+        {
+            var slots = new List<object>();
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+
+                string query = "SELECT id, day_of_week, time_slot, course_name, room, teacher_name, course_type FROM timetable ORDER BY day_of_week ASC, time_slot ASC";
+                using var cmd = new MySqlCommand(query, conn);
+                using var r = cmd.ExecuteReader();
+                while (r.Read())
+                {
+                    slots.Add(new
+                    {
+                        id = r.GetInt32("id"),
+                        dayOfWeek = r.GetInt32("day_of_week"),
+                        timeSlot = r.GetString("time_slot"),
+                        courseName = r.GetString("course_name"),
+                        room = r.IsDBNull(r.GetOrdinal("room")) ? "" : r.GetString("room"),
+                        teacherName = r.IsDBNull(r.GetOrdinal("teacher_name")) ? "" : r.GetString("teacher_name"),
+                        courseType = r.IsDBNull(r.GetOrdinal("course_type")) ? "Лекц" : r.GetString("course_type")
+                    });
+                }
+            }
+            catch { }
+
+            SendJson(new { action = "timetableData", slots });
+        }
+
+        private void AddTimetableSlot(int dayOfWeek, string timeSlot, string courseName, string room, string teacherName, string courseType)
+        {
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+
+                string query = @"INSERT INTO timetable (day_of_week, time_slot, course_name, room, teacher_name, course_type)
+                                 VALUES (@d, @ts, @c, @rm, @tn, @ct)";
+                using var cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@d", dayOfWeek);
+                cmd.Parameters.AddWithValue("@ts", timeSlot);
+                cmd.Parameters.AddWithValue("@c", courseName);
+                cmd.Parameters.AddWithValue("@rm", room);
+                cmd.Parameters.AddWithValue("@tn", teacherName);
+                cmd.Parameters.AddWithValue("@ct", courseType);
+                cmd.ExecuteNonQuery();
+
+                SendJson(new { action = "toast", message = "Хичээлийн хуваарьт амжилттай нэмэгдлээ!" });
+                SendTimetable();
+            }
+            catch (Exception ex)
+            {
+                SendJson(new { action = "toast", message = "Хуваарь нэмэх алдаа: " + ex.Message });
+            }
+        }
+
+        private void DeleteTimetableSlot(int id)
+        {
+            try
+            {
+                using var conn = new MySqlConnection(ConnectionString);
+                conn.Open();
+                using var cmd = new MySqlCommand("DELETE FROM timetable WHERE id = @id", conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.ExecuteNonQuery();
+
+                SendJson(new { action = "toast", message = "Хуваарийн цаг устгагдлаа." });
+                SendTimetable();
+            }
+            catch { }
         }
 
         private void AdminAddPayment(string studentId, int totalFee, int discountAmount, int paidAmount)
